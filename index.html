@@ -249,6 +249,8 @@ select.input{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
 .pun-word span{color:var(--faint)}
 .pun-card p{color:var(--muted);margin-top:12px;font-size:15px}
 .pun-plus{display:grid;place-items:center;font-family:var(--display);font-size:34px;color:var(--faint)}
+.pun-title{font-family:var(--display);font-weight:700;font-size:clamp(28px,4.4vw,46px);letter-spacing:-.03em;line-height:1.1;max-width:900px;margin:0 auto 28px}
+.pun-title b{color:var(--lime)}
 .pun-sum{margin-top:22px;font-family:var(--display);font-size:clamp(20px,2.6vw,26px);font-weight:600;letter-spacing:-.02em}
 .pun-sum b{color:var(--lime)}
 @media (max-width:720px){.pun-row{grid-template-columns:1fr}.pun-plus{font-size:26px}}
@@ -736,12 +738,12 @@ function viewLanding(){
 
   <section class="pun" aria-label="What OPPAPP means">
     <div class="pun-eyebrow">Why the name</div>
+    <div class="pun-title">The <b>OPP</b>ortunities for <b>APP</b>lications <b>APP</b>.</div>
     <div class="pun-row">
       <div class="pun-card"><div class="pun-word"><b>OPP</b><span>ortunities</span></div><p>Internships, research, volunteering, teams — found and matched to you.</p></div>
       <div class="pun-plus" aria-hidden="true">+</div>
       <div class="pun-card"><div class="pun-word"><b>APP</b><span>lications</span></div><p>Emails written, forms filled, every deadline tracked.</p></div>
     </div>
-    <div class="pun-sum"><b>OPP</b>ortunities + <b>APP</b>lications, in one <b>APP</b>.</div>
   </section>
 
   <div class="steps">
