@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23000'/%3E%3Ccircle cx='16' cy='16' r='8' fill='none' stroke='%236ea8ff' stroke-width='3.5'/%3E%3Ccircle cx='16' cy='16' r='2.5' fill='%236ea8ff'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2216%22%20fill%3D%22%233b7bff%22/%3E%3Ccircle%20cx%3D%2221%22%20cy%3D%2230%22%20r%3D%228.5%22%20fill%3D%22none%22%20stroke%3D%22%23fff%22%20stroke-width%3D%225%22/%3E%3Ccircle%20cx%3D%2242%22%20cy%3D%2230%22%20r%3D%228.5%22%20fill%3D%22none%22%20stroke%3D%22%23fff%22%20stroke-width%3D%225%22/%3E%3Cline%20x1%3D%2233.5%22%20y1%3D%2230%22%20x2%3D%2233.5%22%20y2%3D%2250%22%20stroke%3D%22%23fff%22%20stroke-width%3D%225%22%20stroke-linecap%3D%22round%22/%3E%3C/svg%3E">
 <style>
 :root{
   --bg:#070807; --surface:#101210; --surface-2:#161915; --surface-3:#1d211b;
@@ -44,8 +44,7 @@ svg.i.lg{width:22px;height:22px}
 .topbar-in{max-width:1200px;margin:0 auto;padding:0 20px;height:62px;display:flex;align-items:center;gap:20px}
 .brand{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:700;font-size:19px;color:var(--text);letter-spacing:-.01em}
 .brand:hover{text-decoration:none}
-.brand-mark{width:28px;height:28px;border-radius:8px;background:var(--fill);display:grid;place-items:center}
-.brand-mark span{width:12px;height:12px;border-radius:50%;border:3px solid var(--lime-ink)}
+.brand-mark{width:30px;height:30px;display:block;flex:none}
 .nav{display:flex;gap:2px;margin-left:auto;overflow-x:auto;scrollbar-width:none}
 .nav::-webkit-scrollbar{display:none}
 .nav a{display:flex;align-items:center;gap:7px;padding:8px 12px;border-radius:999px;color:var(--muted);font-weight:500;font-size:14px;white-space:nowrap}
@@ -321,7 +320,7 @@ footer .in{max-width:1200px;margin:0 auto;padding:22px 20px;display:flex;justify
 <canvas id="bgNet" aria-hidden="true"></canvas>
 <header class="topbar">
   <div class="topbar-in">
-    <a class="brand" href="#/" aria-label="OPPAPP home"><span class="brand-mark"><span></span></span>OPPAPP</a>
+    <a class="brand" href="#/" aria-label="OPPAPP home"><svg class="brand-mark" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#3b7bff"/><circle cx="21" cy="30" r="8.5" fill="none" stroke="#fff" stroke-width="5"/><circle cx="42" cy="30" r="8.5" fill="none" stroke="#fff" stroke-width="5"/><line x1="33.5" y1="30" x2="33.5" y2="50" stroke="#fff" stroke-width="5" stroke-linecap="round"/></svg>OPPAPP</a>
     <nav class="nav" id="nav" aria-label="Main"></nav>
     <div class="top-right" id="topRight"></div>
   </div>
