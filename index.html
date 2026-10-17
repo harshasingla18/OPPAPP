@@ -25,7 +25,8 @@
   color-scheme:dark;
 }
 *{box-sizing:border-box}
-html,body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+html{background:var(--bg)}
+html,body{margin:0;color:var(--text);font-family:var(--font);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
 a{color:var(--lime);text-decoration:none}
 a:hover{text-decoration:underline}
 h1,h2,h3,h4{font-family:var(--display);letter-spacing:-.02em;margin:0;line-height:1.15}
@@ -33,6 +34,7 @@ p{margin:0}
 button,input,select,textarea{font:inherit;color:inherit}
 ::selection{background:var(--fill);color:var(--lime-ink)}
 :focus-visible{outline:2px solid var(--lime);outline-offset:2px;border-radius:6px}
+#bgNet{position:fixed;inset:0;width:100vw;height:100vh;z-index:-1;pointer-events:none}
 svg.i{width:18px;height:18px;flex:none;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 svg.i.sm{width:15px;height:15px}
 svg.i.lg{width:22px;height:22px}
@@ -304,6 +306,7 @@ footer .in{max-width:1200px;margin:0 auto;padding:22px 20px;display:flex;justify
 </style>
 </head>
 <body>
+<canvas id="bgNet" aria-hidden="true"></canvas>
 <header class="topbar">
   <div class="topbar-in">
     <a class="brand" href="#/" aria-label="OPPAPP home"><span class="brand-mark"><span></span></span>OPPAPP</a>
@@ -1535,6 +1538,45 @@ function showExtract(x, fname){
     log(`Imported details from ${fname||'pasted résumé'}`); save(); toast('Added to your profile'); renderChrome(location.hash); viewProfile();
   };
 }
+
+
+/* ---------- background connection network ---------- */
+(function(){
+  const cv = document.getElementById('bgNet'), x = cv.getContext('2d');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let W, H, d, nodes = [], m = {x:-9999, y:-9999, active:false}, t = 0, last = 0;
+  function size(){
+    d = Math.min(devicePixelRatio || 1, 2);
+    W = cv.width = innerWidth * d; H = cv.height = innerHeight * d;
+    const n = Math.min(110, Math.round(innerWidth * innerHeight / 14000));
+    while (nodes.length < n) nodes.push({x:Math.random(), y:Math.random(), vx:(Math.random()-.5)*.00035, vy:(Math.random()-.5)*.00035});
+    nodes.length = n;
+  }
+  size(); addEventListener('resize', size);
+  addEventListener('pointermove', e => { if (e.pointerType === 'mouse') { m.x = e.clientX*d; m.y = e.clientY*d; m.active = true; last = performance.now(); } }, {passive:true});
+  document.addEventListener('pointerleave', () => m.active = false);
+  const LINK = 130, REACH = 190;
+  function frame(){
+    t++;
+    if (m.active && performance.now() - last > 4000) m.active = false;
+    const cx = m.active ? m.x : W/2 + Math.cos(t/240)*W*.3, cy = m.active ? m.y : H*.4 + Math.sin(t/190)*H*.2;
+    x.clearRect(0,0,W,H);
+    if (!reduce) nodes.forEach(n => { n.x += n.vx; n.y += n.vy; if (n.x<0||n.x>1) n.vx *= -1; if (n.y<0||n.y>1) n.vy *= -1; });
+    const P = nodes.map(n => [n.x*W, n.y*H]), L = LINK*d, R = REACH*d;
+    x.lineWidth = d;
+    for (let i=0;i<P.length;i++){
+      for (let j=i+1;j<P.length;j++){
+        const dx=P[i][0]-P[j][0], dy=P[i][1]-P[j][1]; if (Math.abs(dx)>L||Math.abs(dy)>L) continue;
+        const dd=Math.hypot(dx,dy); if (dd<L){ x.strokeStyle=`rgba(110,168,255,${.11*(1-dd/L)})`; x.beginPath(); x.moveTo(P[i][0],P[i][1]); x.lineTo(P[j][0],P[j][1]); x.stroke(); }
+      }
+      const dm = Math.hypot(P[i][0]-cx, P[i][1]-cy), near = !reduce && dm < R ? 1-dm/R : 0;
+      if (near){ x.strokeStyle=`rgba(110,168,255,${.45*near})`; x.beginPath(); x.moveTo(P[i][0],P[i][1]); x.lineTo(cx,cy); x.stroke(); }
+      x.fillStyle=`rgba(110,168,255,${.35+.5*near})`; x.beginPath(); x.arc(P[i][0],P[i][1],(1.3+1.4*near)*d,0,7); x.fill();
+    }
+    if (!reduce) requestAnimationFrame(frame);
+  }
+  frame();
+})();
 
 /* ---------- boot ---------- */
 render();
