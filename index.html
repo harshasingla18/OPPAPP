@@ -1,0 +1,1544 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OPPAPP — The Opportunity App</title>
+<meta name="description" content="Find your next opportunity. We'll help you get there. Discover internships, research, student teams and more, then prepare personalized applications in one place.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23000'/%3E%3Ccircle cx='16' cy='16' r='8' fill='none' stroke='%23c5f82a' stroke-width='3.5'/%3E%3Ccircle cx='16' cy='16' r='2.5' fill='%23c5f82a'/%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#070807; --surface:#101210; --surface-2:#161915; --surface-3:#1d211b;
+  --border:#252a22; --border-2:#333a2e;
+  --text:#f1f5ec; --muted:#9aa492; --faint:#6b7465;
+  --lime:#c5f82a; --lime-2:#d8ff63; --lime-ink:#0b0f02; --lime-soft:rgba(197,248,42,.10); --lime-line:rgba(197,248,42,.35);
+  --amber:#f6b93b; --amber-soft:rgba(246,185,59,.12);
+  --red:#ff6b5e; --red-soft:rgba(255,107,94,.12);
+  --sky:#7cc4ff; --sky-soft:rgba(124,196,255,.12);
+  --r-sm:8px; --r:12px; --r-lg:18px;
+  --font:'Inter',system-ui,-apple-system,Segoe UI,sans-serif;
+  --display:'Space Grotesk','Inter',system-ui,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+a{color:var(--lime);text-decoration:none}
+a:hover{text-decoration:underline}
+h1,h2,h3,h4{font-family:var(--display);letter-spacing:-.02em;margin:0;line-height:1.15}
+p{margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+::selection{background:var(--lime);color:var(--lime-ink)}
+:focus-visible{outline:2px solid var(--lime);outline-offset:2px;border-radius:6px}
+svg.i{width:18px;height:18px;flex:none;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+svg.i.sm{width:15px;height:15px}
+svg.i.lg{width:22px;height:22px}
+
+/* ---------- layout ---------- */
+.topbar{position:sticky;top:0;z-index:40;background:rgba(7,8,7,.82);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
+.topbar-in{max-width:1200px;margin:0 auto;padding:0 20px;height:62px;display:flex;align-items:center;gap:20px}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:700;font-size:19px;color:var(--text);letter-spacing:-.01em}
+.brand:hover{text-decoration:none}
+.brand-mark{width:28px;height:28px;border-radius:8px;background:var(--lime);display:grid;place-items:center}
+.brand-mark span{width:12px;height:12px;border-radius:50%;border:3px solid var(--lime-ink)}
+.nav{display:flex;gap:2px;margin-left:8px;overflow-x:auto;scrollbar-width:none}
+.nav::-webkit-scrollbar{display:none}
+.nav a{display:flex;align-items:center;gap:7px;padding:8px 12px;border-radius:999px;color:var(--muted);font-weight:500;font-size:14px;white-space:nowrap}
+.nav a:hover{color:var(--text);background:var(--surface-2);text-decoration:none}
+.nav a.on{color:var(--lime-ink);background:var(--lime)}
+.top-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.avatar{width:32px;height:32px;border-radius:50%;background:var(--surface-3);border:1px solid var(--border-2);display:grid;place-items:center;font-size:12px;font-weight:600;color:var(--lime)}
+main{max-width:1200px;margin:0 auto;padding:28px 20px 80px}
+.page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:24px;flex-wrap:wrap}
+.page-head h1{font-size:30px}
+.page-head p{color:var(--muted);margin-top:6px}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--lime)}
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.split{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;align-items:start}
+.split > *,.grid > *,.stack > *{min-width:0}
+.stack{display:flex;flex-direction:column;gap:16px}
+.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.between{justify-content:space-between}
+.muted{color:var(--muted)}
+.faint{color:var(--faint)}
+.small{font-size:13px}
+.tiny{font-size:12px}
+.mono{font-family:var(--mono)}
+.hide{display:none!important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* ---------- surfaces ---------- */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:20px}
+.card.tight{padding:16px}
+.card h3{font-size:17px}
+.card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+.card-head h3{display:flex;align-items:center;gap:8px}
+.divider{height:1px;background:var(--border);margin:16px 0}
+.banner{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-radius:var(--r);border:1px solid var(--border);background:var(--surface-2);font-size:14px}
+.banner.lime{border-color:var(--lime-line);background:var(--lime-soft)}
+.banner.amber{border-color:rgba(246,185,59,.35);background:var(--amber-soft)}
+.banner.red{border-color:rgba(255,107,94,.35);background:var(--red-soft)}
+.banner .i{margin-top:2px}
+
+/* ---------- controls ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:40px;padding:0 16px;border-radius:999px;border:1px solid var(--border-2);background:var(--surface-2);color:var(--text);font-weight:600;font-size:14px;cursor:pointer;transition:background .15s,border-color .15s,transform .05s;white-space:nowrap}
+.btn:hover{background:var(--surface-3);border-color:#454d3e;text-decoration:none}
+.btn:active{transform:translateY(1px)}
+.btn.primary{background:var(--lime);border-color:var(--lime);color:var(--lime-ink)}
+.btn.primary:hover{background:var(--lime-2)}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--muted)}
+.btn.ghost:hover{color:var(--text);background:var(--surface-2)}
+.btn.danger{color:var(--red);border-color:rgba(255,107,94,.35);background:transparent}
+.btn.sm{height:32px;padding:0 12px;font-size:13px}
+.btn.lg{height:50px;padding:0 24px;font-size:16px}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.icon-btn{width:36px;height:36px;padding:0;border-radius:50%}
+label.f{display:block;font-size:13px;font-weight:500;color:var(--muted);margin-bottom:6px}
+.input,select.input,textarea.input{width:100%;background:var(--bg);border:1px solid var(--border-2);border-radius:var(--r-sm);padding:10px 12px;font-size:14px;transition:border-color .15s}
+.input:focus{outline:none;border-color:var(--lime)}
+textarea.input{resize:vertical;min-height:90px;line-height:1.55}
+select.input{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239aa492' stroke-width='2.5'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+.search{position:relative}
+.search .i{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--faint)}
+.search .input{padding-left:42px;height:46px;border-radius:999px;background:var(--surface)}
+.field{margin-bottom:14px}
+.check{display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer}
+.check input{accent-color:var(--lime);width:16px;height:16px}
+
+/* ---------- chips / badges ---------- */
+.chip{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:999px;font-size:12.5px;font-weight:500;background:var(--surface-3);color:var(--text);border:1px solid var(--border-2);white-space:nowrap}
+.chip button{background:none;border:0;padding:0;margin-right:-4px;color:var(--faint);cursor:pointer;display:grid;place-items:center}
+.chip button:hover{color:var(--red)}
+.chip.on{background:var(--lime-soft);border-color:var(--lime-line);color:var(--lime)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.tog{cursor:pointer}
+.badge{display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px;border-radius:6px;font-size:11.5px;font-weight:600;letter-spacing:.01em;white-space:nowrap;background:var(--surface-3);color:var(--muted)}
+.badge .dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+.b-lime{background:var(--lime-soft);color:var(--lime)}
+.b-amber{background:var(--amber-soft);color:var(--amber)}
+.b-red{background:var(--red-soft);color:var(--red)}
+.b-sky{background:var(--sky-soft);color:var(--sky)}
+.b-demo{background:transparent;border:1px dashed var(--border-2);color:var(--muted)}
+
+/* ---------- opportunity cards ---------- */
+.opp{display:flex;flex-direction:column;gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:18px;transition:border-color .15s,transform .15s}
+.opp:hover{border-color:var(--border-2);transform:translateY(-2px)}
+.opp-top{display:flex;gap:12px;align-items:flex-start}
+.logo{width:42px;height:42px;border-radius:11px;flex:none;display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:15px;background:var(--surface-3);color:var(--lime);border:1px solid var(--border-2)}
+.opp h3{font-size:16px;line-height:1.3}
+.opp h3 a{color:var(--text)}
+.opp .org{color:var(--muted);font-size:13.5px;margin-top:2px}
+.meta{display:flex;flex-wrap:wrap;gap:6px 14px;color:var(--muted);font-size:13px}
+.meta span{display:inline-flex;align-items:center;gap:5px}
+.why{font-size:13.5px;color:#cfd6c8;background:var(--surface-2);border-radius:var(--r);padding:10px 12px;border-left:2px solid var(--lime)}
+.opp-foot{display:flex;align-items:center;gap:8px;margin-top:auto}
+.save-btn.on{color:var(--lime);border-color:var(--lime-line);background:var(--lime-soft)}
+
+/* ---------- discover ---------- */
+.disc{display:grid;grid-template-columns:250px minmax(0,1fr);gap:24px;align-items:start}
+.filters{position:sticky;top:82px;display:flex;flex-direction:column;gap:18px}
+.filters h4{font-family:var(--font);font-size:12px;letter-spacing:.07em;text-transform:uppercase;color:var(--faint);margin-bottom:8px;font-weight:600}
+.cat-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+.results-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:14px 0}
+.filter-toggle{display:none}
+
+/* ---------- detail ---------- */
+.dl{display:grid;grid-template-columns:150px 1fr;gap:10px 16px;font-size:14px}
+.dl dt{color:var(--muted)}
+.dl dd{margin:0}
+.assess{display:flex;flex-direction:column;gap:2px}
+.assess-row{display:grid;grid-template-columns:28px 1fr;gap:10px;padding:12px 0;border-bottom:1px solid var(--border)}
+.assess-row:last-child{border-bottom:0}
+.assess-row .ic{width:28px;height:28px;border-radius:8px;display:grid;place-items:center}
+.assess-row h4{font-family:var(--font);font-size:14px;font-weight:600}
+.assess-row p{font-size:13.5px;color:var(--muted);margin-top:2px}
+.ic.ok{background:var(--lime-soft);color:var(--lime)}
+.ic.warn{background:var(--amber-soft);color:var(--amber)}
+.ic.bad{background:var(--red-soft);color:var(--red)}
+.ic.neutral{background:var(--surface-3);color:var(--muted)}
+.prov{font-size:11.5px;font-family:var(--mono);color:var(--faint);text-transform:uppercase;letter-spacing:.05em}
+
+/* ---------- workspace ---------- */
+.tabs{display:flex;gap:4px;padding:4px;background:var(--surface);border:1px solid var(--border);border-radius:999px;width:max-content;max-width:100%;overflow-x:auto}
+.tabs button{border:0;background:none;padding:8px 16px;border-radius:999px;color:var(--muted);font-weight:600;font-size:14px;cursor:pointer;display:flex;gap:7px;align-items:center;white-space:nowrap}
+.tabs button.on{background:var(--surface-3);color:var(--text)}
+.ff{border:1px solid var(--border);border-radius:var(--r);padding:14px;background:var(--surface-2);margin-bottom:12px}
+.ff-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}
+.ff-head label{font-weight:600;font-size:14px}
+.ff .input{background:var(--bg)}
+.checklist{display:flex;flex-direction:column;gap:10px}
+.cl{display:flex;gap:10px;align-items:flex-start;font-size:14px}
+.cl .i{margin-top:2px}
+.cl.ok .i{color:var(--lime)} .cl.warn .i{color:var(--amber)} .cl.bad .i{color:var(--red)}
+.ready{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:var(--r);font-weight:600}
+
+/* ---------- tracker ---------- */
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:20px}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px}
+.kpi b{font-family:var(--display);font-size:28px;display:block;line-height:1.1}
+.kpi span{color:var(--muted);font-size:13px}
+.kpi.hl{background:var(--lime);border-color:var(--lime);color:var(--lime-ink)}
+.kpi.hl span{color:rgba(11,15,2,.7)}
+.app-row{display:grid;grid-template-columns:minmax(0,2.2fr) 1.1fr 1fr 1.1fr auto;gap:14px;align-items:center;padding:14px 16px;border-bottom:1px solid var(--border)}
+.app-row:last-child{border-bottom:0}
+.app-row.head{font-size:12px;color:var(--faint);text-transform:uppercase;letter-spacing:.06em;font-weight:600;padding-top:10px;padding-bottom:10px}
+.app-row select.input,.app-row input.input{height:34px;padding:4px 10px;font-size:13px}
+.app-row select.input{padding-right:28px}
+.notes-row{grid-column:1/-1}
+
+/* ---------- dashboard ---------- */
+.progress{height:8px;border-radius:999px;background:var(--surface-3);overflow:hidden}
+.progress > i{display:block;height:100%;background:var(--lime);border-radius:999px;transition:width .4s}
+.list-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+.list-item:last-child{border-bottom:0}
+.list-item .grow{flex:1;min-width:0}
+.list-item .t{font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.list-item .s{font-size:13px;color:var(--muted)}
+.next{display:flex;gap:12px;align-items:center;padding:12px;border-radius:var(--r);background:var(--surface-2);border:1px solid var(--border);color:var(--text)}
+.next:hover{border-color:var(--lime-line);text-decoration:none}
+.next .ic{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:var(--lime-soft);color:var(--lime);flex:none}
+.empty{text-align:center;padding:36px 20px;color:var(--muted)}
+.empty .ic{width:52px;height:52px;border-radius:16px;margin:0 auto 14px;display:grid;place-items:center;background:var(--surface-2);color:var(--lime);border:1px solid var(--border)}
+.empty h3{color:var(--text);font-size:17px;margin-bottom:6px}
+.empty p{max-width:380px;margin:0 auto 16px;font-size:14px}
+
+/* ---------- profile ---------- */
+.p-section{margin-bottom:18px}
+.item{border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;background:var(--surface-2);display:flex;gap:12px;align-items:flex-start;margin-bottom:8px}
+.item .grow{flex:1;min-width:0}
+.item .t{font-weight:600;font-size:14px}
+.item .d{font-size:13px;color:var(--muted);margin-top:2px}
+.drop{border:1.5px dashed var(--border-2);border-radius:var(--r-lg);padding:22px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s}
+.drop:hover,.drop.over{border-color:var(--lime);background:var(--lime-soft)}
+.extract-item{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--border);font-size:14px}
+.extract-item:last-child{border-bottom:0}
+.extract-item input{accent-color:var(--lime);margin-top:4px}
+
+/* ---------- landing ---------- */
+.hero{position:relative;padding:72px 0 40px;text-align:center;overflow:hidden}
+.hero::before{content:"";position:absolute;inset:-200px -100px auto;height:520px;background:radial-gradient(closest-side,rgba(197,248,42,.16),transparent 70%);pointer-events:none}
+.hero-pill{display:inline-flex;align-items:center;gap:8px;padding:6px 14px 6px 6px;border-radius:999px;border:1px solid var(--border-2);background:var(--surface);font-size:13px;color:var(--muted);margin-bottom:22px}
+.hero-pill b{background:var(--lime);color:var(--lime-ink);padding:2px 9px;border-radius:999px;font-size:11.5px}
+.hero h1{position:relative;font-size:clamp(38px,6.4vw,72px);font-weight:700;letter-spacing:-.04em;max-width:920px;margin:0 auto}
+.hero h1 em{font-style:normal;color:var(--lime)}
+.hero p.lead{position:relative;max-width:620px;margin:22px auto 30px;color:var(--muted);font-size:18px}
+.hero .row{justify-content:center;position:relative}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:56px 0}
+.step{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:20px}
+.step .n{font-family:var(--mono);color:var(--lime);font-size:13px}
+.step h3{font-size:18px;margin:10px 0 6px}
+.step p{color:var(--muted);font-size:14px}
+.preview{border:1px solid var(--border-2);border-radius:22px;background:var(--surface);padding:14px;box-shadow:0 30px 80px -30px rgba(197,248,42,.18)}
+.preview-bar{display:flex;gap:6px;padding:4px 6px 12px}
+.preview-bar i{width:10px;height:10px;border-radius:50%;background:var(--surface-3)}
+.section-title{text-align:center;margin:70px 0 26px}
+.section-title h2{font-size:34px;margin-top:8px}
+.preview-grid{grid-template-columns:1.3fr 1fr 1fr}
+.principles{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.principle{padding:20px;border-radius:var(--r-lg);border:1px solid var(--border);background:var(--surface)}
+.principle .ic{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;background:var(--lime-soft);color:var(--lime);margin-bottom:12px}
+.principle h3{font-size:16px;margin-bottom:6px}
+.principle p{color:var(--muted);font-size:14px}
+.cta-band{margin-top:70px;border-radius:24px;background:var(--lime);color:var(--lime-ink);padding:44px;display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap}
+.cta-band h2{font-size:32px;max-width:540px}
+.cta-band .btn{background:var(--lime-ink);color:var(--lime);border-color:var(--lime-ink)}
+footer{border-top:1px solid var(--border);color:var(--faint);font-size:13px}
+footer .in{max-width:1200px;margin:0 auto;padding:22px 20px;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
+
+/* ---------- overlays ---------- */
+.toast-wrap{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);z-index:100;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none}
+.toast{background:var(--text);color:#0b0d0a;padding:10px 16px;border-radius:999px;font-weight:600;font-size:14px;display:flex;align-items:center;gap:8px;box-shadow:0 10px 30px rgba(0,0,0,.5);animation:pop .22s ease-out}
+.toast .i{color:#4d7a00}
+@keyframes pop{from{opacity:0;transform:translateY(8px) scale(.97)}to{opacity:1;transform:none}}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:80;display:grid;place-items:center;padding:20px;animation:fade .15s}
+@keyframes fade{from{opacity:0}}
+.modal{background:var(--surface);border:1px solid var(--border-2);border-radius:20px;width:100%;max-width:520px;max-height:88vh;overflow:auto;padding:24px}
+.modal h3{font-size:20px;margin-bottom:6px}
+.spin{width:16px;height:16px;border-radius:50%;border:2px solid currentColor;border-right-color:transparent;animation:rot .7s linear infinite}
+@keyframes rot{to{transform:rotate(360deg)}}
+.fade-in{animation:rise .3s ease-out}
+@keyframes rise{from{opacity:0;transform:translateY(6px)}}
+.mobile-nav{display:none}
+
+/* ---------- responsive ---------- */
+@media (max-width:980px){
+  .split{grid-template-columns:1fr}
+  .g4,.steps{grid-template-columns:repeat(2,1fr)}
+  .g3,.principles{grid-template-columns:1fr 1fr}
+  .preview-grid{grid-template-columns:1fr}
+  .disc{grid-template-columns:1fr}
+  .filters{position:static;display:none}
+  .filters.open{display:flex}
+  .filter-toggle{display:inline-flex}
+  .app-row{grid-template-columns:1fr 1fr}
+  .app-row.head{display:none}
+  .app-row > :first-child{grid-column:1/-1}
+}
+@media (max-width:720px){
+  html,body{font-size:14.5px}
+  main{padding:20px 16px 100px}
+  .topbar-in{padding:0 16px}
+  .nav{display:none}
+  .mobile-nav{display:flex;position:fixed;bottom:0;left:0;right:0;z-index:45;background:rgba(10,11,10,.95);backdrop-filter:blur(10px);border-top:1px solid var(--border);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+  .mobile-nav a{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;color:var(--muted);padding:6px 0}
+  .mobile-nav a.on{color:var(--lime)}
+  .mobile-nav a:hover{text-decoration:none}
+  .g2,.g3,.g4,.principles,.steps,.kpis{grid-template-columns:1fr}
+  .kpis{grid-template-columns:1fr 1fr}
+  .dl{grid-template-columns:1fr;gap:2px}
+  .dl dd{margin-bottom:10px}
+  .page-head h1{font-size:25px}
+  .hero{padding:44px 0 20px}
+  .cta-band{padding:28px}
+  .cta-band h2{font-size:24px}
+  .app-row{grid-template-columns:1fr}
+  .landing-only .top-right .btn.hide-sm{display:none}
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-in">
+    <a class="brand" href="#/" aria-label="OPPAPP home"><span class="brand-mark"><span></span></span>OPPAPP</a>
+    <nav class="nav" id="nav" aria-label="Main"></nav>
+    <div class="top-right" id="topRight"></div>
+  </div>
+</header>
+<main id="app" tabindex="-1"></main>
+<nav class="mobile-nav" id="mnav" aria-label="Mobile"></nav>
+<footer><div class="in"><span>OPPAPP — The Opportunity App · Built at DubHacks ’26</span><span>Your data stays in this browser. Nothing is sent or submitted without you.</span></div></footer>
+<div class="toast-wrap" id="toasts" aria-live="polite"></div>
+<div id="modalRoot"></div>
+
+<script>
+"use strict";
+/* =========================================================
+   ICONS (inline, lucide-style strokes)
+   ========================================================= */
+const ICONS = {
+  home:'<path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
+  compass:'<circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/>',
+  folder:'<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+  user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+  search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+  bookmark:'<path d="M6 3h12v18l-6-4-6 4z"/>',
+  check:'<path d="M20 6 9 17l-5-5"/>',
+  checkCircle:'<circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/>',
+  alert:'<path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17.5v.01"/>',
+  x:'<path d="M18 6 6 18M6 6l12 12"/>',
+  xCircle:'<circle cx="12" cy="12" r="9"/><path d="m15 9-6 6M9 9l6 6"/>',
+  help:'<circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17.5v.01"/>',
+  pin:'<path d="M12 21s-7-6.3-7-12a7 7 0 0 1 14 0c0 5.7-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/>',
+  calendar:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+  clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  dollar:'<path d="M12 2v20M17 6.5C17 5 15 4 12 4S7 5.2 7 7.5 9.5 10.5 12 11s5 1.5 5 4-2 3.5-5 3.5-5-1-5-2.5"/>',
+  link:'<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',
+  ext:'<path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>',
+  arrowR:'<path d="M5 12h14M13 6l6 6-6 6"/>',
+  arrowL:'<path d="M19 12H5M11 6l-6 6 6 6"/>',
+  mail:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>',
+  form:'<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>',
+  sparkle:'<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6"/>',
+  copy:'<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a1 1 0 0 1 1-1h10"/>',
+  refresh:'<path d="M20 11a8 8 0 0 0-14.6-4.5L4 8M4 4v4h4M4 13a8 8 0 0 0 14.6 4.5L20 16M20 20v-4h-4"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  trash:'<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>',
+  upload:'<path d="M12 16V4M7 9l5-5 5 5M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/>',
+  file:'<path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z"/><path d="M14 3v5h5"/>',
+  shield:'<path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/>',
+  target:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',
+  layers:'<path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/>',
+  edit:'<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/>',
+  filter:'<path d="M3 5h18l-7 8v6l-4 2v-8z"/>',
+  send:'<path d="M21 3 10 14M21 3l-7 18-4-7-7-4z"/>',
+  bolt:'<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>',
+  graduation:'<path d="m2 9 10-5 10 5-10 5z"/><path d="M6 11v5c3 2 9 2 12 0v-5M22 9v6"/>',
+  beaker:'<path d="M9 3h6M10 3v6L4.5 19a1.5 1.5 0 0 0 1.3 2h12.4a1.5 1.5 0 0 0 1.3-2L14 9V3"/><path d="M7 15h10"/>',
+  code:'<path d="m8 8-5 4 5 4M16 8l5 4-5 4M14 4l-4 16"/>',
+  users:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/>',
+  heart:'<path d="M12 20s-8-5-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 9c0 6-8 11-8 11z"/>',
+  trophy:'<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3"/>',
+  briefcase:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M3 13h18"/>',
+  star:'<path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>',
+  key:'<circle cx="8" cy="15" r="4"/><path d="m11 12 9-9M17 6l3 3M15 8l2 2"/>',
+  info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.01"/>',
+  activity:'<path d="M3 12h4l3-8 4 16 3-8h4"/>',
+  settings:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.9 1.2V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-2.9-1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.7 1.7 0 0 0 3 15H3a2 2 0 1 1 0-4h.1A1.7 1.7 0 0 0 4.6 9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.7 1.7 0 0 0 10 4.6V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 2.9 1.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1A1.7 1.7 0 0 0 19.4 9H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 2z"/>'
+};
+const ic = (n, cls='') => `<svg class="i ${cls}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[n]||''}</svg>`;
+
+/* =========================================================
+   HELPERS
+   ========================================================= */
+const $ = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => [...r.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = () => Math.random().toString(36).slice(2, 10);
+const lc = s => String(s||'').toLowerCase();
+const uniq = a => [...new Set(a)];
+const todayISO = () => new Date().toISOString().slice(0,10);
+const fmtDate = iso => iso ? new Date(iso + (iso.length===10?'T12:00:00':'')).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'}) : '—';
+const daysUntil = iso => iso ? Math.ceil((new Date(iso+'T23:59:59') - new Date())/86400000) : null;
+const addDays = n => { const d = new Date(); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); };
+const timeAgo = ts => { const s=(Date.now()-ts)/1000; if(s<60)return 'just now'; if(s<3600)return Math.floor(s/60)+'m ago'; if(s<86400)return Math.floor(s/3600)+'h ago'; return Math.floor(s/86400)+'d ago'; };
+const initials = s => (String(s||'').match(/\b[A-Za-z0-9]/g)||['?']).slice(0,2).join('').toUpperCase();
+
+function toast(msg, icon='checkCircle'){
+  const t = document.createElement('div');
+  t.className='toast'; t.innerHTML = ic(icon,'sm') + esc(msg);
+  $('#toasts').appendChild(t);
+  setTimeout(()=>{t.style.transition='opacity .3s';t.style.opacity='0';setTimeout(()=>t.remove(),300)}, 2400);
+}
+function modal(html){
+  $('#modalRoot').innerHTML = `<div class="modal-bg" id="mbg"><div class="modal" role="dialog" aria-modal="true">${html}</div></div>`;
+  $('#mbg').addEventListener('click', e => { if(e.target.id==='mbg') closeModal(); });
+  const f = $('#modalRoot .modal input, #modalRoot .modal textarea, #modalRoot .modal button'); f && f.focus();
+}
+function closeModal(){ $('#modalRoot').innerHTML=''; }
+document.addEventListener('keydown', e => { if(e.key==='Escape') closeModal(); });
+async function copyText(t, label){
+  try { await navigator.clipboard.writeText(t); toast(label+' copied'); }
+  catch { const ta=document.createElement('textarea'); ta.value=t; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); toast(label+' copied'); }
+}
+
+/* =========================================================
+   OPPORTUNITY DATA
+   Two kinds:
+   - kind:'real'  -> real, long-running programs. Linked to their official
+                     page. Specific dates are NOT asserted; summaries must be
+                     confirmed on the source.
+   - kind:'demo'  -> fictional organizations, clearly labeled, used to show
+                     the full application workflow end to end.
+   null in a requirement field = UNKNOWN (never assumed).
+   ========================================================= */
+const OPPS = [
+  { id:'gsoc', kind:'real', title:'Google Summer of Code — Contributor', org:'Google Open Source', category:'Open source',
+    description:'A global program where new contributors work on a coding project with an open source organization, guided by mentors from that organization. Contributors write a proposal for a project listed by a participating organization.',
+    location:'Online', arrangement:'remote', eduLevels:['high school','undergraduate','graduate','other'], ageReq:'18+ (per program rules — confirm on source)',
+    required:['Programming'], preferred:['Git','Python','JavaScript','C++','Open source'], tags:['open source','software','coding','mentorship','machine learning','web development'],
+    comp:'paid', compDetails:'Stipend (amount varies by location — see source)', deadline:null, start:'Summer (see program timeline)', duration:'Varies by project size',
+    method:'external', appUrl:'https://summerofcode.withgoogle.com/', sourceUrl:'https://summerofcode.withgoogle.com/', sourceName:'summerofcode.withgoogle.com',
+    eduNote:'Open to students and beginners to open source who meet the age rule, per the program’s public description.' },
+  { id:'reu', kind:'real', title:'Research Experiences for Undergraduates (REU) Sites', org:'U.S. National Science Foundation', category:'Research',
+    description:'NSF funds REU sites at universities across the U.S. where undergraduates join a research group for a summer, usually with a stipend. Each site sets its own topic, application and dates — search the NSF site list to find ones in your field.',
+    location:'Various U.S. campuses', arrangement:'in-person', eduLevels:['undergraduate'], ageReq:null,
+    required:[], preferred:['Research experience','Python','Statistics','Lab skills'], tags:['research','biology','neuroscience','computer science','physics','chemistry','engineering','computational biology','data science'],
+    comp:'paid', compDetails:'Stipend typical; amount set by each site', deadline:null, start:'Summer', duration:'Usually ~10 weeks',
+    method:'external', appUrl:'https://www.nsf.gov/funding/initiatives/reu', sourceName:'nsf.gov', sourceUrl:'https://www.nsf.gov/funding/initiatives/reu',
+    eduNote:'For undergraduates. Most sites require U.S. citizenship or permanent residency — confirm per site.' },
+  { id:'nih-sip', kind:'real', title:'NIH Summer Internship Program (SIP)', org:'National Institutes of Health', category:'Internship',
+    description:'Summer biomedical research in NIH Intramural Research Program labs, working alongside investigators. Applicants submit one application and labs review the pool.',
+    location:'Bethesda, MD and other NIH campuses', arrangement:'in-person', eduLevels:['high school','undergraduate','graduate'], ageReq:'Minimum age applies (see source)',
+    required:[], preferred:['Biology','Chemistry','Python','Statistics','Lab skills','Research experience'], tags:['research','biomedical','biology','neuroscience','computational biology','medicine','health','data science'],
+    comp:'paid', compDetails:'Stipend (see source)', deadline:null, start:'Summer', duration:'Minimum ~8 weeks',
+    method:'external', appUrl:'https://www.training.nih.gov/', sourceUrl:'https://www.training.nih.gov/', sourceName:'training.nih.gov',
+    eduNote:'Program has tracks for high school, college and grad students; citizenship and age rules apply.' },
+  { id:'nasa', kind:'real', title:'NASA Internships (OSTEM)', org:'NASA', category:'Internship',
+    description:'Internships across NASA centers in engineering, science, IT and business, offered in multiple sessions per year. Students search and apply through NASA’s internship gateway.',
+    location:'NASA centers across the U.S.', arrangement:'hybrid', eduLevels:['high school','undergraduate','graduate'], ageReq:'16+ (per program rules — confirm on source)',
+    required:[], preferred:['Python','MATLAB','C++','Engineering','Data analysis'], tags:['engineering','space','aerospace','robotics','software','data science','physics'],
+    comp:'paid', compDetails:'Stipend for most positions (see source)', deadline:null, start:'Spring, summer and fall sessions', duration:'Varies by session',
+    method:'external', appUrl:'https://intern.nasa.gov/', sourceUrl:'https://intern.nasa.gov/', sourceName:'intern.nasa.gov',
+    eduNote:'U.S. citizenship and minimum GPA rules apply per the program.' },
+  { id:'uw-urp', kind:'real', title:'Undergraduate Research Program', org:'University of Washington', category:'Research',
+    description:'UW’s office that helps undergraduates find faculty mentors and research positions, with advising, workshops, a research-position database and the annual Undergraduate Research Symposium.',
+    location:'Seattle, WA', arrangement:'in-person', eduLevels:['undergraduate'], ageReq:null,
+    required:[], preferred:['Research interest'], tags:['research','neuroscience','biology','computer science','computational biology','mentorship','engineering','psychology'],
+    comp:'unknown', compDetails:'Depends on the position', deadline:null, start:'Year-round', duration:'Varies',
+    method:'external', appUrl:'https://www.washington.edu/undergradresearch/', sourceUrl:'https://www.washington.edu/undergradresearch/', sourceName:'washington.edu',
+    eduNote:'Serves UW undergraduates across campuses — confirm for your campus.' },
+  { id:'frc', kind:'real', title:'FIRST Robotics Competition — Join a Team', org:'FIRST', category:'Student teams',
+    description:'High school teams design, build and program industrial-size robots for a yearly game, with mentors from industry. Find a local team to join or start one.',
+    location:'Local teams worldwide', arrangement:'in-person', eduLevels:['high school'], ageReq:'Grades 9–12',
+    required:[], preferred:['Java','C++','CAD','Engineering'], tags:['robotics','engineering','coding','teamwork','competition','stem'],
+    comp:'unpaid', compDetails:'Unpaid (team fees may apply)', deadline:null, start:'Season begins in January', duration:'Season-long',
+    method:'external', appUrl:'https://www.firstinspires.org/robotics/frc', sourceUrl:'https://www.firstinspires.org/', sourceName:'firstinspires.org',
+    eduNote:'For high school students.' },
+  { id:'cac', kind:'real', title:'Congressional App Challenge', org:'U.S. House of Representatives', category:'Competitions',
+    description:'An app-building competition run by congressional district. Students build an original app and winners in each district are recognized by their Member of Congress.',
+    location:'By U.S. congressional district', arrangement:'remote', eduLevels:['high school'], ageReq:'Middle and high school students',
+    required:['Programming'], preferred:['JavaScript','Python','Swift','App development'], tags:['coding','apps','software','competition','civic tech'],
+    comp:'unpaid', compDetails:'Recognition; prizes vary', deadline:null, start:'Annual (fall)', duration:'One season',
+    method:'external', appUrl:'https://www.congressionalappchallenge.us/', sourceUrl:'https://www.congressionalappchallenge.us/', sourceName:'congressionalappchallenge.us',
+    eduNote:'For students in participating districts.' },
+  { id:'sts', kind:'real', title:'Regeneron Science Talent Search', org:'Society for Science', category:'Competitions',
+    description:'A national science and math research competition for high school seniors, judged on original research, with finalists invited to compete in Washington, D.C.',
+    location:'U.S. (national)', arrangement:'remote', eduLevels:['high school'], ageReq:'High school seniors',
+    required:['Research experience'], preferred:['Statistics','Writing','Python'], tags:['research','science','competition','biology','neuroscience','mathematics','engineering'],
+    comp:'paid', compDetails:'Awards for top scholars (see source)', deadline:null, start:'Annual', duration:'One cycle',
+    method:'external', appUrl:'https://www.societyforscience.org/regeneron-sts/', sourceUrl:'https://www.societyforscience.org/regeneron-sts/', sourceName:'societyforscience.org',
+    eduNote:'Seniors only; an original research project is required.' },
+  { id:'hacktober', kind:'real', title:'Hacktoberfest', org:'DigitalOcean', category:'Open source',
+    description:'A month-long celebration of open source each October. Participants contribute pull requests to participating open source projects.',
+    location:'Online', arrangement:'remote', eduLevels:['high school','undergraduate','graduate','other'], ageReq:null,
+    required:['Git'], preferred:['GitHub','JavaScript','Python','Documentation'], tags:['open source','software','coding','web development','beginner friendly'],
+    comp:'unpaid', compDetails:'Unpaid', deadline:null, start:'October', duration:'1 month',
+    method:'external', appUrl:'https://hacktoberfest.com/', sourceUrl:'https://hacktoberfest.com/', sourceName:'hacktoberfest.com',
+    eduNote:'Open participation; age rules for rewards may apply — confirm on source.' },
+  { id:'dubhacks', kind:'real', title:'DubHacks', org:'DubHacks (University of Washington)', category:'Competitions',
+    description:'UW’s annual collegiate hackathon where student builders form teams and ship a technology project over a weekend, with workshops, mentors and sponsor tracks.',
+    location:'Seattle, WA', arrangement:'in-person', eduLevels:['undergraduate','graduate'], ageReq:'18+ college students (per current listing)',
+    required:[], preferred:['JavaScript','Python','Design','Teamwork'], tags:['hackathon','software','coding','competition','design','startups'],
+    comp:'unpaid', compDetails:'Prizes by track', deadline:null, start:'Annual (fall)', duration:'Weekend',
+    method:'external', appUrl:'https://dubhacks.co/', sourceUrl:'https://dubhacks.co/', sourceName:'dubhacks.co',
+    eduNote:'College students 18+.' },
+
+  /* ---------- DEMO (fictional) ---------- */
+  { id:'demo-neuro', kind:'demo', title:'Undergraduate Research Volunteer — Computational Neuroscience', org:'Lakeside Neural Computation Lab (demo)', category:'Research',
+    description:'The lab studies how animals learn flexible, goal-directed behavior using reinforcement-learning models and fiber photometry data. Volunteers help clean and analyze behavioral datasets in Python and present findings at weekly lab meetings. To apply, email the lab manager with a short introduction and your résumé.',
+    location:'Seattle, WA', arrangement:'hybrid', eduLevels:['undergraduate'], ageReq:null,
+    required:['Python'], preferred:['pandas','Statistics','Machine learning','Git','MATLAB'], tags:['research','neuroscience','computational neuroscience','reinforcement learning','data analysis','machine learning','computational biology'],
+    comp:'unpaid', compDetails:'Unpaid volunteer; course credit possible', deadline:addDays(16), start:'Winter quarter', duration:'At least 2 quarters, ~8 hrs/week',
+    method:'email', contact:{ role:'Lab manager', name:'', email:'' }, labFocus:'reinforcement-learning models of flexible, goal-directed behavior and analysis of fiber photometry recordings',
+    appUrl:'', sourceUrl:'', sourceName:'Fictional demo listing',
+    eduNote:'Listing states: open to undergraduates.' },
+  { id:'demo-bio-intern', kind:'demo', title:'Bioinformatics Software Intern (Summer)', org:'Evergreen Genomics (demo)', category:'Internship',
+    description:'Build Python tools that help scientists visualize gene-expression data. You will write tested code, review pull requests and ship a feature to an internal analysis dashboard.',
+    location:'Remote (U.S.)', arrangement:'remote', eduLevels:['undergraduate','graduate'], ageReq:'18+',
+    required:['Python','Git'], preferred:['pandas','SQL','React','Statistics','Bioinformatics'], tags:['internship','bioinformatics','computational biology','software','data science','biology'],
+    comp:'paid', compDetails:'Paid hourly (demo)', deadline:addDays(5), start:'June', duration:'12 weeks',
+    method:'form', appUrl:'', sourceUrl:'', sourceName:'Fictional demo listing',
+    eduNote:'Listing states: undergraduate or graduate students, 18+.',
+    formQuestions:[
+      {key:'name',label:'Full name',required:true,type:'text',map:'name'},
+      {key:'email',label:'Email',required:true,type:'text',map:'email'},
+      {key:'school',label:'School / university',required:true,type:'text',map:'school'},
+      {key:'grad',label:'Expected graduation year',required:true,type:'text',map:'gradYear'},
+      {key:'skills',label:'Relevant technical skills',required:true,type:'text',map:'skillsForOpp'},
+      {key:'project',label:'Describe a relevant project you built (150 words)',required:true,type:'long',draft:'project'},
+      {key:'why',label:'Why are you interested in this internship? (150 words)',required:true,type:'long',draft:'motivation'},
+      {key:'auth',label:'Are you authorized to work in the U.S.?',required:true,type:'choice',options:['Yes','No'],judgment:true},
+      {key:'resume',label:'Résumé',required:true,type:'file',map:'resume'}
+    ] },
+  { id:'demo-mentor', kind:'demo', title:'STEM Tutor & Near-Peer Mentor', org:'Eastside Science Mentors (demo)', category:'Volunteering',
+    description:'Tutor middle school students in math and science twice a week after school and help run a monthly hands-on science night for families.',
+    location:'Bellevue, WA', arrangement:'in-person', eduLevels:null, ageReq:null,
+    required:[], preferred:['Tutoring','Communication','Biology','Mathematics'], tags:['volunteering','mentorship','education','stem','community','teaching'],
+    comp:'unpaid', compDetails:'Unpaid volunteer', deadline:addDays(30), start:'Rolling', duration:'~4 hrs/week',
+    method:'email', contact:{ role:'Volunteer coordinator', name:'', email:'' }, labFocus:'after-school STEM tutoring and family science nights',
+    appUrl:'', sourceUrl:'', sourceName:'Fictional demo listing',
+    eduNote:'Listing does not say who can apply.' }
+];
+const OPP = id => OPPS.find(o => o.id === id);
+const CATEGORIES = ['Internship','Research','Student teams','Volunteering','Open source','Summer programs','Fellowships','Scholarships','Mentorship','Competitions','University programs'];
+const CAT_ICON = {'Internship':'briefcase','Research':'beaker','Student teams':'users','Volunteering':'heart','Open source':'code','Competitions':'trophy','Mentorship':'users','Fellowships':'star','Scholarships':'graduation','Summer programs':'calendar','University programs':'graduation'};
+const EDU_LEVELS = [['high school','High school'],['undergraduate','Undergraduate'],['graduate','Graduate'],['other','Other / not in school']];
+const ARR = {remote:'Remote', hybrid:'Hybrid', 'in-person':'In person'};
+const STATUSES = ['Saved','Researching','In progress','Needs information','Ready for review','Submitted','Follow-up due','Interview','Accepted','Declined','Closed'];
+const STATUS_CLS = {'Saved':'','Researching':'b-sky','In progress':'b-sky','Needs information':'b-amber','Ready for review':'b-lime','Submitted':'b-lime','Follow-up due':'b-amber','Interview':'b-lime','Accepted':'b-lime','Declined':'b-red','Closed':''};
+
+/* =========================================================
+   STATE (persisted to this browser only)
+   ========================================================= */
+const KEY = 'oppapp.v1';
+const EMPTY_PROFILE = () => ({ name:'', email:'', phone:'', school:'', eduLevel:'', gradYear:'', location:'', arrangements:['remote','hybrid','in-person'], interests:[], skills:[], categories:[], availability:'', projects:[], experiences:[], links:{portfolio:'',github:'',linkedin:''}, resumeName:'', isDemo:false });
+const DEMO_PROFILE = () => ({
+  name:'Alex Rivera', email:'alex.rivera@example.com', phone:'', school:'Pacific Northwest State University (demo)', eduLevel:'undergraduate', gradYear:'2028',
+  location:'Seattle, WA', arrangements:['remote','hybrid','in-person'],
+  interests:['Computational biology','Neuroscience','Machine learning','Data science'],
+  skills:['Python','pandas','NumPy','Git','Statistics','R','Jupyter'],
+  categories:['Research','Internship','Open source'], availability:'Part-time during the school year (~10 hrs/week); full-time in summer',
+  projects:[
+    {id:uid(), name:'Gene-expression clustering (class project)', role:'Team of 3', desc:'Cleaned a public RNA-seq dataset in pandas and compared k-means and hierarchical clustering to group genes by expression pattern; presented results to the class.', skills:['Python','pandas','Statistics']},
+    {id:uid(), name:'Study-habit tracker', role:'Solo', desc:'A small Python app that logs study sessions and plots weekly trends with matplotlib.', skills:['Python','Git']}
+  ],
+  experiences:[
+    {id:uid(), type:'Volunteering', title:'Science outreach volunteer', org:'Local library STEM night (demo)', when:'2025 – present', desc:'Help run hands-on science activities for elementary students.'}
+  ],
+  links:{portfolio:'',github:'https://github.com/',linkedin:''}, resumeName:'alex-rivera-resume.pdf (demo)', isDemo:true
+});
+let S = load();
+function load(){
+  try { const s = JSON.parse(localStorage.getItem(KEY)); if(s && s.profile) return Object.assign(defaultState(), s); } catch {}
+  return defaultState();
+}
+function defaultState(){ return { profile:EMPTY_PROFILE(), saved:[], apps:{}, activity:[], settings:{geminiKey:'', model:'gemini-2.5-flash'} }; }
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {} }
+function log(text){ S.activity.unshift({ts:Date.now(), text}); S.activity = S.activity.slice(0,40); save(); }
+const hasProfile = () => !!(S.profile.name || S.profile.skills.length || S.profile.interests.length);
+
+/* =========================================================
+   MATCHING ENGINE (deterministic, explainable)
+   Six separate dimensions — never collapsed into one claim.
+   ========================================================= */
+const norm = s => lc(s).replace(/[^a-z0-9+#.\s-]/g,' ').replace(/\s+/g,' ').trim();
+function skillHas(profileSkills, needed){
+  const n = norm(needed);
+  if (n === 'programming') return profileSkills.some(s => /python|java|c\+\+|javascript|typescript|swift|rust|go|r$|matlab|c#|ruby|kotlin/.test(norm(s)));
+  if (n === 'research experience') return null; // must be evidenced by experiences — checked separately
+  return profileSkills.some(s => { const p = norm(s); return p === n || (p.length>2 && n.includes(p)) || (n.length>2 && p.includes(n)); });
+}
+function match(o, p = S.profile){
+  const r = { labels:[] };
+  // 1. Interest relevance
+  const hay = norm([o.title,o.description,o.category,...o.tags].join(' '));
+  const hitFn = i => { const n = norm(i); return n && (hay.includes(n) || n.split(' ').filter(w=>w.length>4).some(w => hay.includes(w))); };
+  const hits = p.interests.filter(hitFn);
+  const catHit = p.categories.includes(o.category);
+  r.interest = { hits, catHit, level: hits.length>=2 || (hits.length && catHit) ? 'strong' : hits.length || catHit ? 'some' : 'none' };
+  // 2. Stated eligibility
+  if (!p.eduLevel) r.elig = { status:'unknown', note:'Add your education level to check eligibility.' };
+  else if (!o.eduLevels) r.elig = { status:'uncertain', note:'The listing does not say who can apply. Confirm before applying.' };
+  else if (o.eduLevels.includes(p.eduLevel)) r.elig = { status: o.kind==='demo' ? 'meets' : 'likely', note: o.kind==='demo' ? `Listing states it is open to ${labelEdu(p.eduLevel).toLowerCase()} students.` : `Program summary includes ${labelEdu(p.eduLevel).toLowerCase()} students — confirm current rules on the source.` };
+  else r.elig = { status:'not-met', note:`Listing is for ${o.eduLevels.map(labelEdu).join(', ').toLowerCase()} — your profile says ${labelEdu(p.eduLevel).toLowerCase()}.` };
+  if (o.ageReq) r.elig.age = o.ageReq;
+  // 3. Skill alignment
+  const hasResearch = p.experiences.some(e => /research|lab/i.test(e.type+' '+e.title)) || p.projects.some(pr => /research/i.test(pr.name+' '+pr.desc));
+  const metReq=[], missReq=[], unclearReq=[];
+  o.required.forEach(s => { const h = norm(s)==='research experience' ? hasResearch : skillHas(p.skills, s); (h ? metReq : missReq).push(s); });
+  const metPref = o.preferred.filter(s => norm(s)==='research experience' ? hasResearch : skillHas(p.skills, s));
+  r.skills = { metReq, missReq, unclearReq, metPref, prefTotal:o.preferred.length };
+  // 4. Location / arrangement
+  const city = norm((p.location||'').split(',')[0]);
+  const okArr = p.arrangements.includes(o.arrangement);
+  if (o.arrangement === 'remote') r.loc = { status: okArr ? 'fit' : 'pref', note: okArr ? 'Remote — works from anywhere you are.' : 'Remote, but you prefer not to work remotely.' };
+  else if (!okArr) r.loc = { status:'pref', note:`${ARR[o.arrangement]} — outside your work-arrangement preferences.` };
+  else if (city && norm(o.location).includes(city)) r.loc = { status:'fit', note:`${ARR[o.arrangement]} in ${o.location} — matches your location.` };
+  else if (!city) r.loc = { status:'unknown', note:`${ARR[o.arrangement]} in ${o.location}. Add your location to check fit.` };
+  else r.loc = { status:'travel', note:`${ARR[o.arrangement]} in ${o.location} — may require relocating or travel.` };
+  // 5. Deadline
+  const d = daysUntil(o.deadline);
+  r.deadline = d === null ? { status:'unknown', note:'No verified deadline — check the source for current dates.' }
+    : d < 0 ? { status:'passed', days:d, note:`Deadline passed on ${fmtDate(o.deadline)}.` }
+    : d <= 7 ? { status:'soon', days:d, note:`Due in ${d} day${d===1?'':'s'} (${fmtDate(o.deadline)}).` }
+    : { status:'open', days:d, note:`Due ${fmtDate(o.deadline)} — ${d} days left.` };
+  // 6. Information completeness
+  const unknowns = [];
+  if (!o.eduLevels) unknowns.push('who can apply'); if (!o.deadline) unknowns.push('deadline'); if (o.comp==='unknown') unknowns.push('compensation');
+  r.unknowns = unknowns;
+
+  // Labels
+  if (r.interest.level==='strong') r.labels.push(['Strong interest match','b-lime']);
+  else if (r.interest.level==='some') r.labels.push(['Interest match','b-lime']);
+  if (r.elig.status==='meets') r.labels.push(['Eligibility stated in listing','b-lime']);
+  else if (r.elig.status==='likely') r.labels.push(['Likely eligible — confirm','b-sky']);
+  else if (r.elig.status==='not-met') r.labels.push(['Not eligible as listed','b-red']);
+  else r.labels.push(['Eligibility uncertain','b-amber']);
+  if (missReq.length) r.labels.push([`Missing ${missReq.length} stated requirement${missReq.length>1?'s':''}`,'b-amber']);
+  if (r.deadline.status==='soon') r.labels.push(['Deadline approaching','b-amber']);
+  if (r.deadline.status==='passed') r.labels.push(['Deadline passed','b-red']);
+
+  // Heuristic sort score (ranking only; never shown as a "fit %")
+  let sc = r.interest.hits.length*3 + (r.interest.catHit?2:0) + metReq.length*2 + metPref.length - missReq.length*2;
+  if (r.elig.status==='not-met') sc -= 20; if (r.elig.status==='meets') sc += 2; if (r.elig.status==='likely') sc += 1;
+  if (r.loc.status==='fit') sc += 2; if (r.loc.status==='pref') sc -= 3;
+  if (r.deadline.status==='passed') sc -= 30;
+  r.score = sc;
+  r.summary = explain(o, r, p);
+  return r;
+}
+function labelEdu(v){ return (EDU_LEVELS.find(e=>e[0]===v)||[,v||'—'])[1]; }
+function explain(o, r, p){
+  const parts = [];
+  if (r.interest.hits.length) parts.push(`Aligns with your interest in ${listify(r.interest.hits.slice(0,2).map(lc))}`);
+  const skillsHit = uniq([...r.skills.metReq, ...r.skills.metPref]).filter(s=>norm(s)!=='programming');
+  if (skillsHit.length) parts.push((parts.length?'and uses ':'Uses ') + `your ${listify(skillsHit.slice(0,3))} skills`);
+  let s = parts.length ? parts.join(' ') + '.' : 'Limited overlap with the interests and skills in your profile.';
+  if (r.elig.status==='uncertain') s += ' The listing doesn’t say who can apply, so confirm eligibility first.';
+  else if (r.elig.status==='likely') s += ' Confirm current eligibility rules on the official page.';
+  else if (r.elig.status==='not-met') s += ' ' + r.elig.note;
+  if (r.skills.missReq.length) s += ` It lists ${listify(r.skills.missReq)} as required, which isn’t in your profile yet.`;
+  return s;
+}
+function listify(a){ return a.length<=1 ? (a[0]||'') : a.slice(0,-1).join(', ') + ' and ' + a[a.length-1]; }
+
+/* =========================================================
+   ROUTER
+   ========================================================= */
+const ROUTES = [
+  [/^#?\/?$/, viewLanding],
+  [/^#\/dashboard$/, viewDashboard],
+  [/^#\/discover$/, viewDiscover],
+  [/^#\/opp\/([\w-]+)$/, viewDetail],
+  [/^#\/apply\/([\w-]+)$/, viewApply],
+  [/^#\/applications$/, viewApps],
+  [/^#\/profile$/, viewProfile],
+];
+function render(){
+  const h = location.hash || '#/';
+  for (const [re, fn] of ROUTES){ const m = h.match(re); if (m){ renderChrome(h); $('#app').innerHTML=''; fn(...m.slice(1)); $('#app').classList.remove('fade-in'); void $('#app').offsetWidth; $('#app').classList.add('fade-in'); return; } }
+  location.hash = '#/';
+}
+window.addEventListener('hashchange', () => { render(); window.scrollTo(0,0); });
+function go(h){ if (location.hash === h) render(); else location.hash = h; }
+
+function renderChrome(h){
+  const links = [['#/dashboard','Dashboard','home'],['#/discover','Discover','compass'],['#/applications','My Applications','folder'],['#/profile','My Profile','user']];
+  const on = l => h.startsWith(l) || (l==='#/discover' && h.startsWith('#/opp')) || (l==='#/applications' && h.startsWith('#/apply'));
+  $('#nav').innerHTML = links.map(([l,t,i]) => `<a href="${l}" class="${on(l)?'on':''}">${ic(i,'sm')}${t}</a>`).join('');
+  $('#mnav').innerHTML = links.map(([l,t,i]) => `<a href="${l}" class="${on(l)?'on':''}">${ic(i)}${t.replace('My ','')}</a>`).join('');
+  const landing = h==='#/' || h==='#' || h==='';
+  document.body.classList.toggle('landing-only', landing);
+  $('#topRight').innerHTML = landing
+    ? `<a class="btn sm ghost hide-sm" href="#/discover">Explore</a><a class="btn sm primary" href="${hasProfile()?'#/dashboard':'#/profile'}">${hasProfile()?'Open app':'Get started'}</a>`
+    : `${S.profile.isDemo?'<span class="badge b-demo" title="You are using the fictional demo student">Demo student</span>':''}<a class="avatar" href="#/profile" title="My profile">${esc(initials(S.profile.name)||'?')}</a>`;
+}
+
+/* =========================================================
+   VIEW: LANDING
+   ========================================================= */
+function viewLanding(){
+  const sample = OPPS.find(o=>o.id==='demo-neuro');
+  const m = match(sample, DEMO_PROFILE());
+  $('#app').innerHTML = `
+  <section class="hero">
+    <div class="hero-pill"><b>NEW</b> Discovery + applications in one workflow</div>
+    <h1>Your next opportunity is out there. <em>Find it here.</em></h1>
+    <p class="lead">Discover internships, research positions, student teams, volunteering, and more. Build your profile once, find opportunities that fit, and prepare personalized applications in one place.</p>
+    <div class="row">
+      <a class="btn primary lg" href="${hasProfile()?'#/dashboard':'#/profile'}">Find My Opportunities ${ic('arrowR')}</a>
+      <a class="btn lg" href="#/discover">Explore Opportunities</a>
+    </div>
+  </section>
+
+  <div class="preview" aria-label="Product preview">
+    <div class="preview-bar"><i></i><i></i><i></i></div>
+    <div class="grid g3 preview-grid">
+      ${oppCard(sample, m, {preview:true})}
+      <div class="card tight">
+        <div class="eyebrow" style="margin-bottom:10px">Why this fits</div>
+        <div class="assess">
+          ${aRow('ok','target','Interest','Neuroscience, machine learning')}
+          ${aRow('ok','code','Skills','Python required — you have it')}
+          ${aRow('ok','graduation','Eligibility','Listing says undergraduates')}
+        </div>
+      </div>
+      <div class="card tight">
+        <div class="eyebrow" style="margin-bottom:10px">Application</div>
+        <div class="checklist small">
+          <div class="cl ok">${ic('checkCircle','sm')}Email drafted from your profile</div>
+          <div class="cl ok">${ic('checkCircle','sm')}Résumé attached</div>
+          <div class="cl warn">${ic('alert','sm')}Recipient address needed</div>
+          <div class="cl warn">${ic('alert','sm')}Awaiting your review</div>
+        </div>
+        <div class="divider"></div>
+        <span class="badge b-amber"><span class="dot"></span>Needs information</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="steps">
+    ${[['01','Build your profile','Upload a résumé or add projects, skills and interests. No job history required.'],
+       ['02','Discover opportunities','Research, internships, teams, volunteering — each linked to its source.'],
+       ['03','Prepare applications','Personalized emails and form answers grounded only in what’s true about you.'],
+       ['04','Track your progress','Deadlines, follow-ups and statuses in one place. You decide what gets sent.']]
+      .map(s=>`<div class="step"><div class="n">${s[0]}</div><h3>${s[1]}</h3><p>${s[2]}</p></div>`).join('')}
+  </div>
+
+  <div class="section-title"><div class="eyebrow">Built on trust</div><h2>Honest by design</h2></div>
+  <div class="principles">
+    <div class="principle"><div class="ic">${ic('link')}</div><h3>Every listing has a source</h3><p>Real opportunities link to their official page. Demo listings are labeled as demo. Unknown dates and rules stay marked unknown.</p></div>
+    <div class="principle"><div class="ic">${ic('layers')}</div><h3>Fit, not a magic number</h3><p>Interest, eligibility, skills, location and deadline are checked separately and explained in plain language.</p></div>
+    <div class="principle"><div class="ic">${ic('shield')}</div><h3>You stay in control</h3><p>Drafts only use facts from your profile. Nothing is ever sent or submitted for you — you review and send.</p></div>
+  </div>
+
+  <div class="cta-band">
+    <h2>Opportunity shouldn’t depend on who you already know.</h2>
+    <a class="btn lg" href="${hasProfile()?'#/dashboard':'#/profile'}">Find My Opportunities ${ic('arrowR')}</a>
+  </div>`;
+}
+function aRow(kind, icon, title, text){ return `<div class="assess-row"><div class="ic ${kind}">${ic(icon,'sm')}</div><div><h4>${esc(title)}</h4><p>${esc(text)}</p></div></div>`; }
+
+/* =========================================================
+   OPPORTUNITY CARD
+   ========================================================= */
+function oppCard(o, m, opts={}){
+  const saved = S.saved.includes(o.id);
+  const dl = m.deadline;
+  const dlTxt = dl.status==='unknown' ? 'Deadline: check source' : dl.status==='passed' ? 'Closed' : `Due ${fmtDate(o.deadline)}`;
+  const comp = o.comp==='paid' ? 'Paid' : o.comp==='unpaid' ? 'Unpaid' : 'Pay unknown';
+  return `<article class="opp">
+    <div class="opp-top">
+      <div class="logo">${ic(CAT_ICON[o.category]||'star')}</div>
+      <div style="flex:1;min-width:0">
+        <div class="row" style="gap:6px;margin-bottom:5px"><span class="badge">${esc(o.category)}</span>${o.kind==='demo'?'<span class="badge b-demo">Demo listing</span>':'<span class="badge b-sky">'+ic('link','sm')+'Source linked</span>'}</div>
+        <h3>${opts.preview?esc(o.title):`<a href="#/opp/${o.id}">${esc(o.title)}</a>`}</h3>
+        <div class="org">${esc(o.org)}</div>
+      </div>
+    </div>
+    <div class="meta">
+      <span>${ic('pin','sm')}${esc(ARR[o.arrangement])} · ${esc(o.location)}</span>
+      <span class="${dl.status==='soon'?'':''}" style="${dl.status==='soon'?'color:var(--amber)':dl.status==='passed'?'color:var(--red)':''}">${ic('calendar','sm')}${esc(dlTxt)}</span>
+      <span>${ic('dollar','sm')}${comp}</span>
+    </div>
+    ${hasProfile() || opts.preview ? `<div class="why">${esc(m.summary)}</div><div class="chips">${m.labels.map(l=>`<span class="badge ${l[1]}"><span class="dot"></span>${esc(l[0])}</span>`).join('')}</div>` : `<div class="chips">${o.tags.slice(0,4).map(t=>`<span class="chip">${esc(t)}</span>`).join('')}</div>`}
+    ${opts.preview ? '' : `<div class="opp-foot">
+      <a class="btn sm primary" href="#/opp/${o.id}">View details ${ic('arrowR','sm')}</a>
+      <button class="btn sm save-btn ${saved?'on':''}" data-save="${o.id}" aria-pressed="${saved}">${ic('bookmark','sm')}${saved?'Saved':'Save'}</button>
+    </div>`}
+  </article>`;
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-save]'); if (!b) return;
+  toggleSave(b.dataset.save); render();
+});
+function toggleSave(id){
+  const o = OPP(id);
+  if (S.saved.includes(id)) { S.saved = S.saved.filter(x=>x!==id); if (S.apps[id] && S.apps[id].status==='Saved') delete S.apps[id]; log(`Unsaved ${o.title}`); toast('Removed from saved','bookmark'); }
+  else { S.saved.push(id); ensureApp(id, 'Saved'); log(`Saved ${o.title}`); toast('Saved to My Applications','bookmark'); }
+  save();
+}
+function ensureApp(id, status){
+  if (!S.apps[id]) S.apps[id] = { id, status, savedAt:todayISO(), updatedAt:Date.now(), method:OPP(id).method, notes:'', followUp:'', submittedAt:'', email:null, form:null, reviewed:false };
+  if (!S.saved.includes(id)) S.saved.push(id);
+  return S.apps[id];
+}
+
+/* =========================================================
+   VIEW: DASHBOARD
+   ========================================================= */
+function profileCompletion(p = S.profile){
+  const checks = [
+    ['Name', !!p.name], ['Email', !!p.email], ['Education level', !!p.eduLevel], ['School', !!p.school], ['Graduation year', !!p.gradYear],
+    ['Location', !!p.location], ['At least 3 interests', p.interests.length>=3], ['At least 3 skills', p.skills.length>=3],
+    ['A project', p.projects.length>0], ['Opportunity types', p.categories.length>0], ['Availability', !!p.availability], ['Résumé', !!p.resumeName]
+  ];
+  return { pct: Math.round(checks.filter(c=>c[1]).length / checks.length * 100), missing: checks.filter(c=>!c[1]).map(c=>c[0]) };
+}
+function viewDashboard(){
+  if (!hasProfile()) { $('#app').innerHTML = `<div class="card" style="max-width:640px;margin:40px auto">${emptyState('user','Start with your profile','OPPAPP recommends opportunities and drafts applications from your profile. Add yours, or try the app with a fictional demo student.',`<div class="row" style="justify-content:center"><a class="btn primary" href="#/profile">Build my profile</a><button class="btn" id="loadDemo">Try the demo student</button></div>`)}</div>`; $('#loadDemo').onclick = loadDemo; return; }
+  const p = S.profile, pc = profileCompletion();
+  const ranked = OPPS.map(o=>({o, m:match(o)})).filter(x=>x.m.elig.status!=='not-met' && x.m.deadline.status!=='passed').sort((a,b)=>b.m.score-a.m.score);
+  const apps = Object.values(S.apps);
+  const attention = apps.filter(a => ['Needs information','Ready for review','Follow-up due'].includes(a.status) || (a.followUp && daysUntil(a.followUp)<=0 && !['Accepted','Declined','Closed'].includes(a.status)));
+  const deadlines = apps.map(a=>({a,o:OPP(a.id)})).filter(x=>x.o.deadline && daysUntil(x.o.deadline)>=0 && !['Submitted','Accepted','Declined','Closed','Interview'].includes(x.a.status)).sort((a,b)=>a.o.deadline.localeCompare(b.o.deadline));
+  const hr = new Date().getHours(); const greet = hr<5?'Up late':hr<12?'Good morning':hr<18?'Good afternoon':'Good evening';
+  const nexts = [];
+  if (pc.pct < 100) nexts.push(['user', `Complete your profile (${pc.missing.slice(0,2).join(', ')}${pc.missing.length>2?'…':''})`, '#/profile']);
+  attention.slice(0,2).forEach(a => nexts.push(['form', `${a.status}: ${OPP(a.id).title}`, `#/apply/${a.id}`]));
+  if (!apps.length && ranked[0]) nexts.push(['compass', `Review your top match: ${ranked[0].o.title}`, `#/opp/${ranked[0].o.id}`]);
+  nexts.push(['search', 'Browse all opportunities', '#/discover']);
+
+  $('#app').innerHTML = `
+  <div class="page-head"><div><div class="eyebrow">Dashboard</div><h1>${greet}, ${esc(p.name.split(' ')[0]||'there')}.</h1><p>${apps.length ? `You’re tracking ${apps.length} opportunit${apps.length===1?'y':'ies'}${attention.length?` — ${attention.length} need${attention.length===1?'s':''} your attention`:''}.` : 'Here are opportunities that fit your profile.'}</p></div>
+  <a class="btn primary" href="#/discover">${ic('compass','sm')}Discover</a></div>
+  ${p.isDemo?`<div class="banner" style="margin-bottom:16px">${ic('info')}<div>You’re viewing <b>Alex Rivera</b>, a fictional demo student. Replace with your own details anytime in <a href="#/profile">My Profile</a>.</div></div>`:''}
+  <div class="kpis">
+    <div class="kpi hl"><b>${pc.pct}%</b><span>Profile complete</span></div>
+    <div class="kpi"><b>${S.saved.length}</b><span>Saved</span></div>
+    <div class="kpi"><b>${apps.filter(a=>['In progress','Needs information','Ready for review','Researching'].includes(a.status)).length}</b><span>In progress</span></div>
+    <div class="kpi"><b>${apps.filter(a=>['Submitted','Follow-up due','Interview','Accepted'].includes(a.status)).length}</b><span>Submitted</span></div>
+  </div>
+  <div class="split">
+    <div class="stack">
+      <div class="card">
+        <div class="card-head"><h3>${ic('target','sm')}Recommended for you</h3><a class="small" href="#/discover">See all</a></div>
+        <div class="grid g2">${ranked.slice(0,4).map(x=>oppCard(x.o,x.m)).join('')}</div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>${ic('folder','sm')}Applications needing attention</h3><a class="small" href="#/applications">Open tracker</a></div>
+        ${attention.length ? attention.map(a=>{const o=OPP(a.id);return `<div class="list-item"><div class="logo" style="width:36px;height:36px">${ic(CAT_ICON[o.category]||'star','sm')}</div><div class="grow"><div class="t">${esc(o.title)}</div><div class="s">${esc(o.org)}</div></div><span class="badge ${STATUS_CLS[a.status]}">${esc(a.status)}</span><a class="btn sm" href="#/apply/${o.id}">Open</a></div>`}).join('')
+          : emptyState('checkCircle','Nothing needs you right now','Applications that are missing information or waiting for your review will show up here.')}
+      </div>
+    </div>
+    <div class="stack">
+      <div class="card">
+        <div class="card-head"><h3>Next steps</h3></div>
+        <div class="stack" style="gap:8px">${nexts.slice(0,4).map(n=>`<a class="next" href="${n[2]}"><span class="ic">${ic(n[0],'sm')}</span><span class="small" style="flex:1">${esc(n[1])}</span>${ic('arrowR','sm')}</a>`).join('')}</div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>${ic('calendar','sm')}Upcoming deadlines</h3></div>
+        ${deadlines.length ? deadlines.map(x=>{const d=daysUntil(x.o.deadline);return `<div class="list-item"><div class="grow"><div class="t">${esc(x.o.title)}</div><div class="s">${fmtDate(x.o.deadline)}</div></div><span class="badge ${d<=7?'b-amber':''}">${d}d</span></div>`}).join('')
+          : `<p class="small muted">Save opportunities with known deadlines to see them here. Many real programs don’t have verified dates yet — check their source.</p>`}
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>${ic('activity','sm')}Recent activity</h3></div>
+        ${S.activity.length ? S.activity.slice(0,6).map(a=>`<div class="list-item"><div class="grow"><div class="s" style="color:var(--text)">${esc(a.text)}</div></div><span class="tiny faint">${timeAgo(a.ts)}</span></div>`).join('') : '<p class="small muted">Your activity will appear here.</p>'}
+      </div>
+    </div>
+  </div>`;
+}
+function emptyState(icon, title, text, extra=''){ return `<div class="empty"><div class="ic">${ic(icon,'lg')}</div><h3>${esc(title)}</h3><p>${esc(text)}</p>${extra}</div>`; }
+
+/* =========================================================
+   VIEW: DISCOVER
+   ========================================================= */
+const F = { q:'', cats:[], edu:'', arr:[], comp:[], elig:'', deadline:'', source:'', sort:'best', skill:'' };
+function viewDiscover(){
+  $('#app').innerHTML = `
+  <div class="page-head"><div><div class="eyebrow">Discover</div><h1>Find opportunities</h1><p>Real programs link to their official source. Demo listings are fictional and labeled.</p></div></div>
+  <div class="search" style="margin-bottom:14px">${ic('search')}<input class="input" id="q" placeholder="Search by title, organization, field or skill…" value="${esc(F.q)}" aria-label="Search opportunities"></div>
+  <div class="cat-row" id="cats"></div>
+  <div class="disc">
+    <aside class="filters" id="filters"></aside>
+    <section>
+      <div class="results-head">
+        <div class="row"><button class="btn sm filter-toggle" id="ftog">${ic('filter','sm')}Filters</button><span class="muted small" id="count"></span></div>
+        <label class="row small muted">Sort
+          <select class="input" id="sort" style="width:auto;height:36px;padding-top:4px;padding-bottom:4px">
+            <option value="best">Best match</option><option value="deadline">Deadline</option><option value="az">A–Z</option><option value="verified">Real listings first</option>
+          </select></label>
+      </div>
+      ${!hasProfile()?`<div class="banner lime" style="margin-bottom:14px">${ic('sparkle')}<div><b>Want personalized matches?</b> <a href="#/profile">Add your profile</a> to see why each opportunity fits and what’s missing.</div></div>`:''}
+      <div class="grid g2" id="results"></div>
+    </section>
+  </div>`;
+  $('#sort').value = F.sort;
+  $('#q').oninput = e => { F.q = e.target.value; drawResults(); };
+  $('#sort').onchange = e => { F.sort = e.target.value; drawResults(); };
+  $('#ftog').onclick = () => $('#filters').classList.toggle('open');
+  drawFilters(); drawResults();
+}
+function drawFilters(){
+  $('#cats').innerHTML = `<button class="chip tog ${!F.cats.length?'on':''}" data-cat="">All</button>` + CATEGORIES.map(c=>`<button class="chip tog ${F.cats.includes(c)?'on':''}" data-cat="${c}">${esc(c)}</button>`).join('');
+  $$('#cats [data-cat]').forEach(b => b.onclick = () => { const c=b.dataset.cat; F.cats = !c ? [] : F.cats.includes(c) ? F.cats.filter(x=>x!==c) : [...F.cats, c]; drawFilters(); drawResults(); });
+  const allSkills = uniq(OPPS.flatMap(o=>[...o.required,...o.preferred])).sort();
+  const cb = (group, val, label) => `<label class="check"><input type="checkbox" data-g="${group}" value="${val}" ${F[group].includes(val)?'checked':''}>${label}</label>`;
+  $('#filters').innerHTML = `
+    <div><h4>Education level</h4><select class="input" data-f="edu"><option value="">Any</option>${EDU_LEVELS.map(e=>`<option value="${e[0]}" ${F.edu===e[0]?'selected':''}>${e[1]}</option>`).join('')}</select></div>
+    <div><h4>Work arrangement</h4><div class="stack" style="gap:6px">${Object.entries(ARR).map(([k,v])=>cb('arr',k,v)).join('')}</div></div>
+    <div><h4>Compensation</h4><div class="stack" style="gap:6px">${cb('comp','paid','Paid')}${cb('comp','unpaid','Unpaid')}${cb('comp','unknown','Unknown')}</div></div>
+    <div><h4>Skill</h4><select class="input" data-f="skill"><option value="">Any</option>${allSkills.map(s=>`<option ${F.skill===s?'selected':''}>${esc(s)}</option>`).join('')}</select></div>
+    <div><h4>Deadline</h4><select class="input" data-f="deadline"><option value="">Any</option><option value="known" ${F.deadline==='known'?'selected':''}>Has a known deadline</option><option value="30" ${F.deadline==='30'?'selected':''}>Due within 30 days</option><option value="open" ${F.deadline==='open'?'selected':''}>Hide passed deadlines</option></select></div>
+    <div><h4>Eligibility (for you)</h4><select class="input" data-f="elig" ${!hasProfile()?'disabled':''}><option value="">Any</option><option value="ok" ${F.elig==='ok'?'selected':''}>Stated or likely eligible</option><option value="hide" ${F.elig==='hide'?'selected':''}>Hide “not eligible”</option><option value="uncertain" ${F.elig==='uncertain'?'selected':''}>Uncertain only</option></select></div>
+    <div><h4>Listing type</h4><select class="input" data-f="source"><option value="">All</option><option value="real" ${F.source==='real'?'selected':''}>Real programs (source linked)</option><option value="demo" ${F.source==='demo'?'selected':''}>Demo listings</option></select></div>
+    <button class="btn sm ghost" id="clearF">${ic('x','sm')}Clear filters</button>`;
+  $$('#filters [data-f]').forEach(s => s.onchange = () => { F[s.dataset.f] = s.value; drawResults(); });
+  $$('#filters [data-g]').forEach(c => c.onchange = () => { const g=c.dataset.g; F[g] = c.checked ? [...F[g], c.value] : F[g].filter(x=>x!==c.value); drawResults(); });
+  $('#clearF').onclick = () => { Object.assign(F,{q:'',cats:[],edu:'',arr:[],comp:[],elig:'',deadline:'',source:'',skill:''}); $('#q').value=''; drawFilters(); drawResults(); };
+}
+function drawResults(){
+  const q = norm(F.q);
+  let list = OPPS.map(o=>({o, m:match(o)})).filter(({o,m}) => {
+    if (q && !norm([o.title,o.org,o.description,o.category,...o.tags,...o.required,...o.preferred].join(' ')).includes(q)) return false;
+    if (F.cats.length && !F.cats.includes(o.category)) return false;
+    if (F.edu && o.eduLevels && !o.eduLevels.includes(F.edu)) return false;
+    if (F.arr.length && !F.arr.includes(o.arrangement)) return false;
+    if (F.comp.length && !F.comp.includes(o.comp)) return false;
+    if (F.skill && ![...o.required,...o.preferred].includes(F.skill)) return false;
+    if (F.deadline==='known' && !o.deadline) return false;
+    if (F.deadline==='30' && !(o.deadline && daysUntil(o.deadline)>=0 && daysUntil(o.deadline)<=30)) return false;
+    if (F.deadline==='open' && m.deadline.status==='passed') return false;
+    if (F.elig==='ok' && !['meets','likely'].includes(m.elig.status)) return false;
+    if (F.elig==='hide' && m.elig.status==='not-met') return false;
+    if (F.elig==='uncertain' && m.elig.status!=='uncertain') return false;
+    if (F.source && o.kind!==F.source) return false;
+    return true;
+  });
+  const by = {best:(a,b)=>b.m.score-a.m.score, deadline:(a,b)=>(a.o.deadline||'9999').localeCompare(b.o.deadline||'9999'), az:(a,b)=>a.o.title.localeCompare(b.o.title), verified:(a,b)=>(a.o.kind==='real'?0:1)-(b.o.kind==='real'?0:1) || b.m.score-a.m.score};
+  list.sort(by[F.sort]);
+  $('#count').textContent = `${list.length} opportunit${list.length===1?'y':'ies'}`;
+  $('#results').innerHTML = list.length ? list.map(x=>oppCard(x.o,x.m)).join('') : `<div class="card" style="grid-column:1/-1">${emptyState('search','No matches','Try removing a filter or searching for a broader term.')}</div>`;
+}
+
+/* =========================================================
+   VIEW: OPPORTUNITY DETAIL
+   ========================================================= */
+function viewDetail(id){
+  const o = OPP(id); if (!o) return go('#/discover');
+  const m = match(o), p = S.profile, saved = S.saved.includes(id);
+  const eligIc = {meets:['ok','checkCircle'],likely:['ok','checkCircle'],uncertain:['warn','help'],unknown:['neutral','help'],'not-met':['bad','xCircle']}[m.elig.status];
+  const intIc = m.interest.level==='none' ? ['neutral','target'] : ['ok','target'];
+  const skIc = m.skills.missReq.length ? ['warn','code'] : ['ok','code'];
+  const locIc = {fit:['ok','pin'],travel:['warn','pin'],pref:['warn','pin'],unknown:['neutral','pin']}[m.loc.status];
+  const dlIc = {open:['ok','calendar'],soon:['warn','calendar'],passed:['bad','calendar'],unknown:['neutral','calendar']}[m.deadline.status];
+  const reqList = arr => arr.length ? arr.map(esc).join(', ') : '<span class="faint">None stated</span>';
+  const nextAction = m.deadline.status==='passed' ? 'This deadline has passed. Save it and watch for the next cycle.'
+    : m.elig.status==='not-met' ? 'Your profile doesn’t meet the stated education requirement. Look for similar programs at your level.'
+    : o.kind==='real' ? 'Open the official page to confirm eligibility and current dates, then prepare your materials here.'
+    : m.elig.status==='uncertain' ? 'Ask the organization whether you’re eligible — OPPAPP can draft that email for you.'
+    : 'You look like a fit on paper. Prepare your application and review it before sending.';
+
+  $('#app').innerHTML = `
+  <a class="btn sm ghost" href="#/discover" style="margin-bottom:14px">${ic('arrowL','sm')}Back to Discover</a>
+  <div class="split">
+    <div class="stack">
+      <div class="card">
+        <div class="opp-top" style="margin-bottom:14px">
+          <div class="logo" style="width:52px;height:52px">${ic(CAT_ICON[o.category]||'star','lg')}</div>
+          <div style="flex:1">
+            <div class="row" style="gap:6px;margin-bottom:6px"><span class="badge">${esc(o.category)}</span>${o.kind==='demo'?'<span class="badge b-demo">Demo listing — fictional organization</span>':'<span class="badge b-sky">'+ic('link','sm')+'Real program · source linked</span>'}</div>
+            <h1 style="font-size:26px">${esc(o.title)}</h1>
+            <div class="muted" style="margin-top:4px">${esc(o.org)}</div>
+          </div>
+        </div>
+        ${o.kind==='real'?`<div class="banner amber" style="margin-bottom:16px">${ic('info')}<div>This is a summary of a real, long-running program. Dates, rules and stipends change every cycle — <b>confirm everything on the official page</b> before applying.</div></div>`
+          :`<div class="banner" style="margin-bottom:16px">${ic('info')}<div>This is a <b>fictional demo listing</b> used to show the full application workflow. It is not a real opening.</div></div>`}
+        <p style="color:#d5dccf">${esc(o.description)}</p>
+        <div class="divider"></div>
+        <dl class="dl">
+          <dt>Location</dt><dd>${esc(ARR[o.arrangement])} · ${esc(o.location)}</dd>
+          <dt>Who can apply</dt><dd>${o.eduLevels ? o.eduLevels.map(labelEdu).join(', ') : '<span class="badge b-amber">Unknown — not stated</span>'}${o.eduNote?`<div class="small muted">${esc(o.eduNote)}</div>`:''}</dd>
+          <dt>Age</dt><dd>${o.ageReq ? esc(o.ageReq) : '<span class="faint">Not stated</span>'}</dd>
+          <dt>Required</dt><dd>${reqList(o.required)}</dd>
+          <dt>Preferred</dt><dd>${reqList(o.preferred)}</dd>
+          <dt>Compensation</dt><dd>${o.comp==='unknown'?'<span class="badge b-amber">Unknown</span> ':''}${esc(o.compDetails)}</dd>
+          <dt>Deadline</dt><dd>${o.deadline ? fmtDate(o.deadline) + (o.kind==='demo'?' <span class="faint small">(demo date)</span>':'') : '<span class="badge b-amber">Not verified — check source</span>'}</dd>
+          <dt>Start · duration</dt><dd>${esc(o.start)} · ${esc(o.duration)}</dd>
+          <dt>How to apply</dt><dd>${o.method==='email'?'Email '+esc(o.contact?.role||'the organization'):o.method==='form'?'Online application form':'On the official website'}</dd>
+          <dt>Source</dt><dd>${o.sourceUrl?`<a href="${esc(o.sourceUrl)}" target="_blank" rel="noopener">${esc(o.sourceName)} ${ic('ext','sm')}</a><div class="small muted">Not verified by OPPAPP in this build — details summarized, confirm on source.</div>`:`<span class="faint">${esc(o.sourceName)}</span>`}</dd>
+        </dl>
+      </div>
+    </div>
+    <div class="stack" style="position:sticky;top:82px">
+      <div class="card">
+        <div class="card-head"><h3>${ic('target','sm')}Your fit</h3>${!hasProfile()?'':''}</div>
+        ${!hasProfile() ? emptyState('user','Add your profile to see your fit','We’ll check interests, eligibility, skills, location and deadline separately.',`<a class="btn sm primary" href="#/profile">Build profile</a>`) : `
+        <p class="small" style="margin-bottom:6px">${esc(m.summary)}</p>
+        <div class="assess">
+          ${aRow(intIc[0],intIc[1],'Interest relevance', (m.interest.hits.length?`Matches ${m.interest.hits.join(', ')}.`:'No overlap with your listed interests.') + (m.interest.catHit?` ${o.category} is one of your preferred opportunity types.`:''))}
+          ${aRow(eligIc[0],eligIc[1],'Stated eligibility', m.elig.note + (m.elig.age?` Age: ${m.elig.age}.`:''))}
+          ${aRow(skIc[0],skIc[1],'Skills', (m.skills.metReq.length?`You have required: ${m.skills.metReq.join(', ')}. `:'') + (m.skills.missReq.length?`Missing required: ${m.skills.missReq.join(', ')}. `:'') + (m.skills.prefTotal?`${m.skills.metPref.length} of ${m.skills.prefTotal} preferred${m.skills.metPref.length?` (${m.skills.metPref.join(', ')})`:''}.`:'') || 'No skills listed.')}
+          ${aRow(locIc[0],locIc[1],'Location & arrangement', m.loc.note)}
+          ${aRow(dlIc[0],dlIc[1],'Deadline', m.deadline.note)}
+          ${m.unknowns.length?aRow('neutral','help','Unknown information', `The listing doesn’t confirm: ${m.unknowns.join(', ')}.`):''}
+        </div>
+        <div class="prov" style="margin-top:8px">Rule-based check · not a prediction of acceptance</div>`}
+      </div>
+      <div class="card">
+        <div class="eyebrow" style="margin-bottom:8px">Recommended next step</div>
+        <p class="small" style="margin-bottom:14px">${esc(nextAction)}</p>
+        <div class="stack" style="gap:8px">
+          ${o.method==='external' ? `<a class="btn primary" href="${esc(o.appUrl)}" target="_blank" rel="noopener">${ic('ext','sm')}Open original listing</a><a class="btn" href="#/apply/${o.id}">${ic('form','sm')}Prepare materials</a>`
+            : `<a class="btn primary" href="#/apply/${o.id}" id="prep">${ic('sparkle','sm')}Prepare Application</a>`}
+          <button class="btn save-btn ${saved?'on':''}" data-save="${o.id}">${ic('bookmark','sm')}${saved?'Saved':'Save opportunity'}</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* =========================================================
+   DRAFTING (grounded in profile only)
+   ========================================================= */
+function bestProject(o, p = S.profile){
+  if (!p.projects.length) return null;
+  const hay = norm([o.title,o.description,...o.tags,...o.required,...o.preferred].join(' '));
+  return p.projects.map(pr => ({pr, s: (pr.skills||[]).filter(s=>hay.includes(norm(s))).length*2 + norm(pr.name+' '+pr.desc).split(' ').filter(w=>w.length>5 && hay.includes(w)).length})).sort((a,b)=>b.s-a.s)[0].pr;
+}
+function relevantSkills(o, p = S.profile){
+  const want = [...o.required, ...o.preferred];
+  const hit = p.skills.filter(s => want.some(w => skillHas([s], w)));
+  return (hit.length ? hit : p.skills).slice(0,5);
+}
+function templateEmail(o, p = S.profile){
+  const m = match(o, p), pr = bestProject(o, p), sk = relevantSkills(o, p);
+  const first = (p.name||'').split(' ')[0] || '[Your name]';
+  const yr = p.gradYear ? `, class of ${p.gradYear}` : '';
+  const lvl = p.eduLevel==='high school' ? 'high school student' : p.eduLevel==='graduate' ? 'graduate student' : p.eduLevel==='undergraduate' ? 'undergraduate' : 'student';
+  const ints = m.interest.hits.length ? m.interest.hits.slice(0,2).map(lc) : p.interests.slice(0,2).map(lc);
+  const greeting = o.contact?.name ? `Dear ${o.contact.name},` : `Dear ${o.contact?.role || 'Hiring Team'},`;
+  const paras = [greeting,
+    `My name is ${p.name || '[Your name]'}, and I’m ${/^[aeiou]/i.test(lvl)?'an':'a'} ${lvl}${p.school?` at ${p.school}`:''}${yr}. I’m writing about the ${o.title} position with ${o.org.replace(/ \(demo\)$/,'')}.`];
+  const fit = [o.labFocus ? `Your group’s focus on ${o.labFocus} connects directly to my interest in ${listify(ints)}.` : `This opportunity connects directly to my interest in ${listify(ints)}.`];
+  if (pr) fit.push(`Most relevant to this role, I worked on ${pr.name.replace(/\s*\(.*\)$/,'')}${pr.role?` (${pr.role.toLowerCase()})`:''}, where I ${pr.desc.charAt(0).toLowerCase()+pr.desc.slice(1).replace(/\.$/,'')}.`);
+  paras.push(fit.join(' '));
+  if (sk.length) paras.push(`I’m comfortable with ${listify(sk)}${m.skills.missReq.length?`, and I’m actively building experience with ${listify(m.skills.missReq)}`:''}.${p.availability?` My availability: ${p.availability.replace(/\.$/,'')}.`:''}`);
+  const close = [];
+  if (m.elig.status==='uncertain') close.push(`Could you let me know whether ${lvl}s are eligible for this position?`);
+  close.push(`I’ve attached my résumé and would be grateful for the chance to talk about how I could contribute. Thank you for your time.`);
+  paras.push(close.join(' '));
+  paras.push(['Best regards,', p.name || first, [p.email, p.links?.github && p.links.github!=='https://github.com/' ? p.links.github : ''].filter(Boolean).join(' · ')].filter(Boolean).join('\n'));
+  const short = o.title.split(' — ')[0];
+  return { to: o.contact?.email || '', subject: `Interest in ${short}${o.title.includes(' — ')?' ('+o.title.split(' — ')[1]+')':''}${p.name?' — '+p.name:''}`, body: paras.join('\n\n'), engine:'template' };
+}
+function templateFree(kind, o, p = S.profile){
+  const pr = bestProject(o, p), sk = relevantSkills(o, p), m = match(o, p);
+  if (kind==='project'){
+    if (!pr) return '';
+    return `${pr.name.replace(/\s*\(.*\)$/,'')}${pr.role?` (${pr.role})`:''}: ${pr.desc} ${pr.skills?.length?`I used ${listify(pr.skills)}.`:''} It’s my most relevant work for this role because it involved ${listify(pr.skills?.slice(0,2).map(lc)||['the same tools'])}.`.trim();
+  }
+  if (kind==='motivation'){
+    const ints = m.interest.hits.length ? m.interest.hits : p.interests.slice(0,2);
+    if (!ints.length) return '';
+    return `I’m interested in this role because it sits at the intersection of my interests in ${listify(ints.map(lc))}. ${pr?`My ${pr.name.replace(/\s*\(.*\)$/,'').toLowerCase()} gave me hands-on experience with ${listify((pr.skills||sk).slice(0,2))}, and I want to apply those skills to real problems with experienced mentors.`:`I want to apply my ${listify(sk.slice(0,2))} skills to real problems with experienced mentors.`} ${p.availability?`I’m available ${lc(p.availability).replace(/\.$/,'')}.`:''}`.trim();
+  }
+  return '';
+}
+
+/* Optional Gemini — key stays in this browser, user must opt in. */
+async function geminiDraft(prompt){
+  const key = S.settings.geminiKey; if (!key) throw new Error('No API key');
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(S.settings.model||'gemini-2.5-flash')}:generateContent`;
+  const res = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json','x-goog-api-key':key}, body: JSON.stringify({ contents:[{role:'user',parts:[{text:prompt}]}], generationConfig:{ temperature:0.5, responseMimeType:'application/json' } }) });
+  if (!res.ok) throw new Error(`Gemini error ${res.status}`);
+  const j = await res.json();
+  const txt = j?.candidates?.[0]?.content?.parts?.map(p=>p.text).join('') || '';
+  return JSON.parse(txt.replace(/^```json|```$/g,'').trim());
+}
+const GROUNDING = `Rules: Use ONLY facts in STUDENT_PROFILE. Never invent courses, papers read, grades, awards, skills, experiences or recipients. If the student lacks something, do not claim it. Do not flatter generically. Keep it concise, warm and professional. Do not include placeholder brackets.`;
+function profileForAI(p = S.profile){ const {name,eduLevel,school,gradYear,interests,skills,availability,projects,experiences,email} = p; return {name,email,eduLevel,school,gradYear,interests,skills,availability,projects:projects.map(({name,role,desc,skills})=>({name,role,desc,skills})),experiences:experiences.map(({type,title,org,when,desc})=>({type,title,org,when,desc}))}; }
+function oppForAI(o){ const {title,org,category,description,required,preferred,eduLevels,labFocus,contact} = o; return {title,org:org.replace(/ \(demo\)$/,''),category,description,required,preferred,eligibleLevels:eduLevels,focus:labFocus,recipientRole:contact?.role}; }
+
+/* =========================================================
+   VIEW: APPLICATION WORKSPACE
+   ========================================================= */
+let WS = { tab:null };
+function viewApply(id){
+  const o = OPP(id); if (!o) return go('#/discover');
+  if (!hasProfile()) { $('#app').innerHTML = `<div class="card" style="max-width:640px;margin:40px auto">${emptyState('user','Add your profile first','Applications are drafted only from facts in your profile, so we need it before preparing anything.',`<div class="row" style="justify-content:center"><a class="btn primary" href="#/profile">Build my profile</a><button class="btn" id="loadDemo">Use demo student</button></div>`)}</div>`; $('#loadDemo').onclick = () => { loadDemo(); go(`#/apply/${id}`); }; return; }
+  const a = ensureApp(id, 'In progress');
+  if (a.status==='Saved' || a.status==='Researching') { a.status = 'In progress'; a.updatedAt = Date.now(); log(`Started preparing ${o.title}`); }
+  save();
+  const m = match(o);
+  const tabs = o.method==='email' ? ['email'] : o.method==='form' ? ['form','email'] : ['form','email'];
+  if (!WS.tab || !tabs.includes(WS.tab) || WS.id!==id) WS = { tab:tabs[0], id };
+  if (!a.email) a.email = templateEmail(o);
+  if (!a.form) a.form = buildForm(o);
+  save();
+
+  $('#app').innerHTML = `
+  <a class="btn sm ghost" href="#/opp/${o.id}" style="margin-bottom:14px">${ic('arrowL','sm')}Back to listing</a>
+  <div class="page-head">
+    <div><div class="eyebrow">Application workspace</div><h1>${esc(o.title)}</h1><p>${esc(o.org)} ${o.kind==='demo'?'<span class="badge b-demo" style="margin-left:6px">Demo listing</span>':''}</p></div>
+    <div class="row"><span class="badge ${STATUS_CLS[a.status]}" id="stBadge"><span class="dot"></span>${esc(a.status)}</span></div>
+  </div>
+  ${o.method==='external'?`<div class="banner" style="margin-bottom:16px">${ic('info')}<div>This program applies on its <a href="${esc(o.appUrl)}" target="_blank" rel="noopener">official site</a>. Use this workspace to prepare answers from your profile, then paste them in. OPPAPP never fills or submits external sites for you.</div></div>`:''}
+  <div class="split">
+    <div class="stack">
+      <div class="tabs" role="tablist">${tabs.map(t=>`<button role="tab" data-tab="${t}" class="${WS.tab===t?'on':''}">${t==='email'?ic('mail','sm')+(o.method==='email'?'Outreach email':'Email (optional)'):ic('form','sm')+(o.method==='form'?'Application form':'Prepared answers')}</button>`).join('')}</div>
+      <div id="wsBody"></div>
+    </div>
+    <div class="stack" style="position:sticky;top:82px">
+      <div class="card" id="readyCard"></div>
+      <div class="card">
+        <div class="card-head"><h3>${ic('user','sm')}Using from your profile</h3><a class="small" href="#/profile">Edit</a></div>
+        <div class="small stack" style="gap:8px">
+          <div><span class="muted">Skills matched:</span> ${relevantSkills(o).map(esc).join(', ')||'—'}</div>
+          <div><span class="muted">Best project:</span> ${esc(bestProject(o)?.name||'None yet — add one')}</div>
+          <div><span class="muted">Résumé:</span> ${S.profile.resumeName?esc(S.profile.resumeName):'<span style="color:var(--amber)">None uploaded</span>'}</div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+  $$('[data-tab]').forEach(b => b.onclick = () => { WS.tab = b.dataset.tab; $$('[data-tab]').forEach(x=>x.classList.toggle('on', x===b)); drawWS(o); });
+  drawWS(o);
+}
+function buildForm(o){
+  const qs = o.formQuestions || [
+    {key:'name',label:'Full name',required:true,type:'text',map:'name'},
+    {key:'email',label:'Email',required:true,type:'text',map:'email'},
+    {key:'school',label:'School / university',required:true,type:'text',map:'school'},
+    {key:'grad',label:'Graduation year',required:false,type:'text',map:'gradYear'},
+    {key:'skills',label:'Relevant skills',required:false,type:'text',map:'skillsForOpp'},
+    {key:'project',label:'Relevant project or experience',required:true,type:'long',draft:'project'},
+    {key:'why',label:'Why this opportunity?',required:true,type:'long',draft:'motivation'}
+  ];
+  const p = S.profile;
+  return qs.map(q => {
+    let value = '', src = 'empty';
+    if (q.map==='skillsForOpp') { value = relevantSkills(o).join(', '); src = value?'profile':'empty'; }
+    else if (q.map==='resume') { value = p.resumeName||''; src = value?'profile':'empty'; }
+    else if (q.map) { value = p[q.map]||''; src = value?'profile':'empty'; }
+    else if (q.draft) { value = templateFree(q.draft, o); src = value?'drafted':'empty'; }
+    if (q.judgment) src = 'judgment';
+    return { ...q, value, src, reviewed:false };
+  });
+}
+const SRC = { profile:['From profile','b-lime'], drafted:['Drafted — review','b-sky'], ai:['Drafted by Gemini — review','b-sky'], empty:['Needs your answer','b-amber'], judgment:['Your judgment required','b-amber'], edited:['Edited by you','b-lime'] };
+function drawWS(o){
+  const a = S.apps[o.id];
+  if (WS.tab === 'email') {
+    const e = a.email;
+    $('#wsBody').innerHTML = `
+    <div class="card">
+      <div class="card-head"><h3>${ic('mail','sm')}Personalized email</h3><span class="badge ${e.engine==='gemini'?'b-sky':''}">${e.engine==='gemini'?ic('sparkle','sm')+'Drafted with Gemini':'Template draft · from your profile'}</span></div>
+      <div class="field"><label class="f" for="eTo">To</label><input class="input" id="eTo" placeholder="${o.contact?.role?`${esc(o.contact.role)}’s email — find it on the official page`:'Recipient email'}" value="${esc(e.to)}">
+        <div class="tiny ${e.to?'hide':''}" id="toHint" style="color:var(--amber);margin-top:5px">OPPAPP never guesses email addresses. Add the real address from the organization’s page.</div></div>
+      <div class="field"><div class="row between"><label class="f" for="eSub">Subject</label><button class="btn sm ghost" data-copy="sub">${ic('copy','sm')}Copy</button></div><input class="input" id="eSub" value="${esc(e.subject)}"></div>
+      <div class="field"><div class="row between"><label class="f" for="eBody">Body</label><button class="btn sm ghost" data-copy="body">${ic('copy','sm')}Copy</button></div><textarea class="input" id="eBody" rows="16">${esc(e.body)}</textarea></div>
+      <div class="row">
+        <button class="btn" id="regen">${ic('refresh','sm')}Regenerate</button>
+        ${S.settings.geminiKey?`<button class="btn" id="aiGen">${ic('sparkle','sm')}Draft with Gemini</button>`:`<button class="btn ghost" id="aiSetup">${ic('key','sm')}Enable Gemini (optional)</button>`}
+        <span style="flex:1"></span>
+        <button class="btn" id="saveDraft">${ic('check','sm')}Save draft</button>
+        <a class="btn primary" id="mailto" href="#">${ic('send','sm')}Open in my email app</a>
+      </div>
+      <p class="tiny faint" style="margin-top:10px">“Open in my email app” creates a draft in your own mail client — you review and press send. OPPAPP does not send anything.</p>
+    </div>`;
+    const sync = () => { a.email.to=$('#eTo').value.trim(); $('#toHint').classList.toggle('hide', !!a.email.to); a.email.subject=$('#eSub').value; a.email.body=$('#eBody').value; a.updatedAt=Date.now(); save(); drawReady(o); };
+    ['#eTo','#eSub','#eBody'].forEach(s => $(s).addEventListener('input', sync));
+    $$('[data-copy]').forEach(b => b.onclick = () => copyText(b.dataset.copy==='sub'?$('#eSub').value:$('#eBody').value, b.dataset.copy==='sub'?'Subject':'Email body'));
+    $('#regen').onclick = () => { a.email = { ...templateEmail(o), to:a.email.to }; save(); drawWS(o); drawReady(o); toast('Draft regenerated from your profile','refresh'); };
+    $('#saveDraft').onclick = () => { sync(); log(`Saved email draft for ${o.title}`); toast('Draft saved to application'); };
+    $('#mailto').onclick = ev => { ev.preventDefault(); sync(); if (!a.email.to){ toast('Add a recipient email first','alert'); $('#eTo').focus(); return; } location.href = `mailto:${encodeURIComponent(a.email.to)}?subject=${encodeURIComponent(a.email.subject)}&body=${encodeURIComponent(a.email.body)}`; log(`Opened email draft for ${o.title} in mail app`); };
+    if ($('#aiSetup')) $('#aiSetup').onclick = openSettings;
+    if ($('#aiGen')) $('#aiGen').onclick = async ev => {
+      const b = ev.currentTarget; b.disabled = true; b.innerHTML = '<span class="spin"></span>Drafting…';
+      try {
+        const r = await geminiDraft(`Write an outreach/application email from a student.\n${GROUNDING}\nIf eligibility is not stated in OPPORTUNITY, politely ask about it. Mention that a résumé is attached. Return JSON {"subject": string, "body": string}.\nSTUDENT_PROFILE: ${JSON.stringify(profileForAI())}\nOPPORTUNITY: ${JSON.stringify(oppForAI(o))}`);
+        if (typeof r.subject!=='string' || typeof r.body!=='string') throw new Error('Unexpected response shape');
+        a.email = { to:a.email.to, subject:r.subject, body:r.body, engine:'gemini' }; save(); drawWS(o); drawReady(o); toast('Gemini draft ready — review it carefully','sparkle'); log(`Drafted email with Gemini for ${o.title}`);
+      } catch(err){ toast('Gemini unavailable — kept your template draft','alert'); b.disabled=false; b.innerHTML = ic('sparkle','sm')+'Draft with Gemini'; }
+    };
+  } else {
+    $('#wsBody').innerHTML = `
+    <div class="card">
+      <div class="card-head"><h3>${ic('form','sm')}${o.method==='form'?'Application form':'Prepared answers'}</h3><div class="row" style="gap:6px"><span class="badge b-lime">${a.form.filter(f=>f.src==='profile').length} from profile</span><span class="badge b-sky">${a.form.filter(f=>['drafted','ai'].includes(f.src)).length} drafted</span><span class="badge b-amber">${a.form.filter(f=>['empty','judgment'].includes(f.src)).length} need you</span></div></div>
+      ${a.form.map((f,i)=>`<div class="ff">
+        <div class="ff-head"><label for="ff${i}">${esc(f.label)}${f.required?' <span style="color:var(--red)">*</span>':''}</label><span class="badge ${SRC[f.src][1]}">${SRC[f.src][0]}</span></div>
+        ${f.type==='long'?`<textarea class="input" id="ff${i}" data-i="${i}" rows="5" placeholder="Write your answer…">${esc(f.value)}</textarea>`
+         : f.type==='choice'?`<select class="input" id="ff${i}" data-i="${i}"><option value="">Choose…</option>${f.options.map(op=>`<option ${f.value===op?'selected':''}>${esc(op)}</option>`).join('')}</select><div class="tiny faint" style="margin-top:5px">OPPAPP will not answer this for you.</div>`
+         : f.type==='file'?`<div class="row"><span class="chip">${ic('file','sm')}${f.value?esc(f.value):'No résumé on file'}</span>${!f.value?'<a class="small" href="#/profile">Add résumé</a>':''}</div>`
+         : `<input class="input" id="ff${i}" data-i="${i}" value="${esc(f.value)}">`}
+        ${['drafted','ai'].includes(f.src)?`<label class="check tiny" style="margin-top:8px"><input type="checkbox" data-rev="${i}" ${f.reviewed?'checked':''}>I reviewed this and it’s accurate</label>`:''}
+      </div>`).join('')}
+      <div class="row">
+        <button class="btn" id="refill">${ic('refresh','sm')}Re-fill from profile</button>
+        <span style="flex:1"></span>
+        <button class="btn" id="copyAll">${ic('copy','sm')}Copy all answers</button>
+        <button class="btn primary" id="saveForm">${ic('check','sm')}Save answers</button>
+      </div>
+    </div>`;
+    $$('#wsBody [data-i]').forEach(el => el.addEventListener('input', () => { const f = a.form[+el.dataset.i]; f.value = el.value; if (f.src!=='judgment') f.src = f.value ? (f.src==='empty'?'edited':f.src==='profile'?'profile':'edited') : 'empty'; if (f.src==='edited') f.reviewed = true; a.updatedAt=Date.now(); save(); drawReady(o); }));
+    $$('#wsBody [data-i]').forEach(el => el.addEventListener('change', () => drawWS(o)));
+    $$('[data-rev]').forEach(c => c.onchange = () => { a.form[+c.dataset.rev].reviewed = c.checked; save(); drawReady(o); });
+    $('#refill').onclick = () => { a.form = buildForm(o); save(); drawWS(o); drawReady(o); toast('Re-filled from your profile','refresh'); };
+    $('#copyAll').onclick = () => copyText(a.form.filter(f=>f.type!=='file').map(f=>`${f.label}\n${f.value||'(blank)'}`).join('\n\n'), 'Answers');
+    $('#saveForm').onclick = () => { log(`Saved answers for ${o.title}`); toast('Answers saved to application'); };
+  }
+  drawReady(o);
+}
+function readiness(o){
+  const a = S.apps[o.id], m = match(o), p = S.profile, items = [];
+  const push = (k, t) => items.push([k, t]);
+  if (o.method==='email' || WS.tab==='email') {
+    const e = a.email;
+    push(e.to ? 'ok':'bad', e.to ? 'Recipient address added' : 'Recipient email missing');
+    push(e.subject.trim() && e.body.trim().length>80 ? 'ok':'bad', e.body.trim().length>80 ? 'Subject and body written' : 'Email body is too short');
+    push(/\[[^\]]+\]/.test(e.body+e.subject) ? 'bad':'ok', /\[[^\]]+\]/.test(e.body+e.subject) ? 'Draft still has [placeholders]' : 'No placeholders left');
+  }
+  if (o.method!=='email') {
+    const reqMissing = a.form.filter(f=>f.required && !f.value);
+    push(reqMissing.length?'bad':'ok', reqMissing.length ? `${reqMissing.length} required field${reqMissing.length>1?'s':''} empty` : 'All required fields answered');
+    const unrev = a.form.filter(f=>['drafted','ai'].includes(f.src) && !f.reviewed);
+    push(unrev.length?'warn':'ok', unrev.length ? `${unrev.length} drafted answer${unrev.length>1?'s':''} not yet reviewed` : 'Drafted answers reviewed');
+  }
+  push(p.resumeName?'ok':'bad', p.resumeName ? 'Résumé on file' : 'No résumé uploaded');
+  push(m.elig.status==='meets'?'ok':m.elig.status==='not-met'?'bad':'warn', m.elig.status==='meets'?'Eligibility stated in listing':m.elig.status==='not-met'?'Doesn’t meet stated eligibility':'Eligibility needs confirmation');
+  push(m.deadline.status==='passed'?'bad':m.deadline.status==='unknown'?'warn':'ok', m.deadline.status==='passed'?'Deadline passed':m.deadline.status==='unknown'?'Deadline not verified':`Deadline ${m.deadline.status==='soon'?'soon — ':''}${fmtDate(o.deadline)}`);
+  push((o.sourceUrl || o.kind==='demo')?'ok':'warn', o.kind==='demo' ? 'Source recorded (demo listing)' : 'Official source recorded');
+  push(a.reviewed?'ok':'warn', a.reviewed ? 'You marked this reviewed' : 'Awaiting your final review');
+  const bad = items.filter(i=>i[0]==='bad').length, warn = items.filter(i=>i[0]==='warn').length;
+  let label = 'Ready for review', cls='b-lime';
+  if (m.deadline.status==='passed') { label='Deadline passed'; cls='b-red'; }
+  else if (bad) { label='Missing information'; cls='b-amber'; }
+  else if (m.elig.status!=='meets' && m.elig.status!=='likely') { label='Eligibility needs confirmation'; cls='b-amber'; }
+  else if (!a.reviewed) { label='Awaiting your review'; cls='b-sky'; }
+  return { items, label, cls, bad, warn };
+}
+function drawReady(o){
+  const a = S.apps[o.id], r = readiness(o);
+  const terminal = ['Submitted','Follow-up due','Interview','Accepted','Declined','Closed'].includes(a.status);
+  if (!terminal) {
+    const newStatus = r.bad ? 'Needs information' : a.reviewed ? 'Ready for review' : 'In progress';
+    if (newStatus !== a.status) { a.status = newStatus; save(); const sb=$('#stBadge'); if (sb){ sb.className = 'badge '+STATUS_CLS[a.status]; sb.innerHTML = '<span class="dot"></span>'+esc(a.status); } }
+  }
+  $('#readyCard').innerHTML = `
+    <div class="card-head"><h3>${ic('shield','sm')}Readiness check</h3></div>
+    <div class="ready ${''}" style="background:var(--surface-2);margin-bottom:14px"><span class="badge ${r.cls}"><span class="dot"></span>${esc(r.label)}</span></div>
+    <div class="checklist">${r.items.map(([k,t])=>`<div class="cl ${k}">${ic(k==='ok'?'checkCircle':k==='warn'?'alert':'xCircle','sm')}<span>${esc(t)}</span></div>`).join('')}</div>
+    <div class="divider"></div>
+    <label class="check small" style="margin-bottom:12px"><input type="checkbox" id="revAll" ${a.reviewed?'checked':''}>I’ve reviewed everything and it’s accurate</label>
+    ${terminal ? `<div class="banner lime small">${ic('checkCircle','sm')}<div>Marked <b>${esc(a.status)}</b>${a.submittedAt?` on ${fmtDate(a.submittedAt)}`:''}. Track it in <a href="#/applications">My Applications</a>.</div></div>`
+      : `<button class="btn primary" id="markSub" style="width:100%" ${r.bad?'disabled':''}>${ic('send','sm')}I submitted this</button>
+         <p class="tiny faint" style="margin-top:8px">Only mark submitted after you’ve actually sent it. Preparing a draft is not submitting.</p>`}
+    <p class="tiny faint" style="margin-top:6px">A complete checklist doesn’t guarantee acceptance.</p>`;
+  $('#revAll').onchange = e => { a.reviewed = e.target.checked; a.updatedAt=Date.now(); if (a.reviewed) log(`Reviewed application for ${o.title}`); save(); drawReady(o); };
+  if ($('#markSub')) $('#markSub').onclick = () => {
+    modal(`<h3>Did you actually send this?</h3><p class="muted small" style="margin-bottom:16px">Confirm only if you submitted the application or sent the email yourself. We’ll set a follow-up reminder.</p>
+      <div class="field"><label class="f" for="subDate">Date submitted</label><input type="date" class="input" id="subDate" value="${todayISO()}"></div>
+      <div class="field"><label class="f" for="fuDate">Follow up on</label><input type="date" class="input" id="fuDate" value="${addDays(10)}"></div>
+      <div class="row" style="justify-content:flex-end"><button class="btn ghost" id="mNo">Not yet</button><button class="btn primary" id="mYes">Yes, I submitted it</button></div>`);
+    $('#mNo').onclick = closeModal;
+    $('#mYes').onclick = () => { a.status='Submitted'; a.submittedAt=$('#subDate').value||todayISO(); a.followUp=$('#fuDate').value; a.updatedAt=Date.now(); log(`Marked ${o.title} as submitted`); save(); closeModal(); toast('Marked as submitted — follow-up scheduled'); render(); };
+  };
+}
+
+/* =========================================================
+   VIEW: MY APPLICATIONS (tracker)
+   ========================================================= */
+function viewApps(){
+  const apps = Object.values(S.apps).sort((a,b)=>b.updatedAt-a.updatedAt);
+  const count = f => apps.filter(f).length;
+  $('#app').innerHTML = `
+  <div class="page-head"><div><div class="eyebrow">Tracker</div><h1>My Applications</h1><p>Everything you’re pursuing. Prepared ≠ submitted — you confirm when something is sent.</p></div><a class="btn primary" href="#/discover">${ic('plus','sm')}Find more</a></div>
+  <div class="kpis">
+    <div class="kpi"><b>${count(a=>a.status==='Saved'||a.status==='Researching')}</b><span>Saved / researching</span></div>
+    <div class="kpi"><b>${count(a=>['In progress','Needs information','Ready for review'].includes(a.status))}</b><span>Preparing</span></div>
+    <div class="kpi hl"><b>${count(a=>['Submitted','Follow-up due','Interview'].includes(a.status))}</b><span>Submitted / active</span></div>
+    <div class="kpi"><b>${count(a=>a.followUp && daysUntil(a.followUp)<=0 && !['Accepted','Declined','Closed'].includes(a.status))}</b><span>Follow-ups due</span></div>
+  </div>
+  <div class="card" style="padding:0">
+    ${apps.length ? `<div class="app-row head"><span>Opportunity</span><span>Status</span><span>Deadline</span><span>Follow up</span><span></span></div>` + apps.map(a => {
+      const o = OPP(a.id), d = daysUntil(o.deadline), fu = a.followUp ? daysUntil(a.followUp) : null;
+      return `<div class="app-row">
+        <div class="row" style="flex-wrap:nowrap;min-width:0"><div class="logo" style="width:38px;height:38px">${ic(CAT_ICON[o.category]||'star','sm')}</div><div style="min-width:0"><a href="#/opp/${o.id}" style="color:var(--text);font-weight:600;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(o.title)}</a><div class="tiny muted">${esc(o.org)} · ${o.method==='email'?'Email':o.method==='form'?'Form':'Official site'}${a.submittedAt?` · sent ${fmtDate(a.submittedAt)}`:` · saved ${fmtDate(a.savedAt)}`}</div></div></div>
+        <div><select class="input" data-st="${a.id}" aria-label="Status">${STATUSES.map(s=>`<option ${s===a.status?'selected':''}>${s}</option>`).join('')}</select></div>
+        <div class="small">${o.deadline?`${fmtDate(o.deadline)} ${d<0?'<span class="badge b-red">passed</span>':d<=7?`<span class="badge b-amber">${d}d</span>`:''}`:'<span class="faint">Check source</span>'}</div>
+        <div><input type="date" class="input" data-fu="${a.id}" value="${esc(a.followUp)}" aria-label="Follow-up date">${fu!==null&&fu<=0&&!['Accepted','Declined','Closed'].includes(a.status)?'<div class="tiny" style="color:var(--amber);margin-top:3px">Follow-up due</div>':''}</div>
+        <div class="row" style="flex-wrap:nowrap;gap:4px"><a class="btn sm" href="#/apply/${o.id}">${ic('edit','sm')}Open</a><button class="btn sm ghost icon-btn" data-note="${a.id}" title="Notes" aria-label="Notes">${ic('file','sm')}</button><button class="btn sm ghost icon-btn" data-del="${a.id}" title="Remove" aria-label="Remove">${ic('trash','sm')}</button></div>
+        ${a.notes?`<div class="notes-row tiny muted">${ic('file','sm')} ${esc(a.notes)}</div>`:''}
+      </div>`; }).join('')
+    : emptyState('folder','No applications yet','Save opportunities from Discover or start preparing one — they’ll show up here with deadlines and follow-ups.','<a class="btn primary" href="#/discover">Discover opportunities</a>')}
+  </div>`;
+  $$('[data-st]').forEach(s => s.onchange = () => {
+    const a = S.apps[s.dataset.st], o = OPP(a.id);
+    if (s.value==='Submitted' && !a.submittedAt) { if (!confirm('Mark as submitted? Only do this if you actually sent it.')) { s.value=a.status; return; } a.submittedAt = todayISO(); if (!a.followUp) a.followUp = addDays(10); }
+    a.status = s.value; a.updatedAt = Date.now(); log(`${o.title}: status → ${s.value}`); save(); toast(`Status: ${s.value}`); viewApps();
+  });
+  $$('[data-fu]').forEach(i => i.onchange = () => { const a=S.apps[i.dataset.fu]; a.followUp=i.value; a.updatedAt=Date.now(); save(); toast(i.value?`Follow-up set for ${fmtDate(i.value)}`:'Follow-up cleared','calendar'); viewApps(); });
+  $$('[data-note]').forEach(b => b.onclick = () => { const a=S.apps[b.dataset.note];
+    modal(`<h3>Notes</h3><p class="muted small" style="margin-bottom:12px">${esc(OPP(a.id).title)}</p><textarea class="input" id="noteTx" rows="6" placeholder="Who you talked to, what to follow up on…">${esc(a.notes)}</textarea><div class="row" style="justify-content:flex-end;margin-top:12px"><button class="btn ghost" id="nC">Cancel</button><button class="btn primary" id="nS">Save notes</button></div>`);
+    $('#nC').onclick=closeModal; $('#nS').onclick=()=>{a.notes=$('#noteTx').value.trim(); a.updatedAt=Date.now(); save(); closeModal(); toast('Notes saved'); viewApps();}; });
+  $$('[data-del]').forEach(b => b.onclick = () => { const id=b.dataset.del; if(!confirm('Remove this from your tracker? Drafts for it will be deleted.')) return; delete S.apps[id]; S.saved=S.saved.filter(x=>x!==id); log(`Removed ${OPP(id).title} from tracker`); save(); toast('Removed','trash'); viewApps(); });
+}
+
+/* =========================================================
+   VIEW: PROFILE
+   ========================================================= */
+const SKILL_DICT = ['Python','Java','JavaScript','TypeScript','C++','C#','C','R','MATLAB','SQL','Swift','Kotlin','Go','Rust','HTML','CSS','React','Node.js','Next.js','Django','Flask','pandas','NumPy','SciPy','scikit-learn','PyTorch','TensorFlow','Jupyter','Git','GitHub','Linux','Docker','AWS','Firebase','Figma','Excel','Tableau','Statistics','Machine learning','Deep learning','Data analysis','Bioinformatics','CAD','SolidWorks','Arduino','Lab skills','PCR','Microscopy','Cell culture','Tutoring','Public speaking','Writing','Research','Spanish','Communication','Leadership','Adobe Photoshop','Premiere Pro','Fiber photometry'];
+const INTEREST_SUGG = ['Neuroscience','Computational biology','Machine learning','Artificial intelligence','Data science','Software engineering','Robotics','Medicine','Public health','Biotechnology','Climate','Education','Startups','Design','Space','Psychology','Mathematics','Open source'];
+function viewProfile(){
+  const p = S.profile, pc = profileCompletion();
+  $('#app').innerHTML = `
+  <div class="page-head"><div><div class="eyebrow">My profile</div><h1>${p.name?esc(p.name):'Build your profile'}</h1><p>Your single source of truth. Every recommendation and draft uses only what’s here.</p></div>
+    <div class="row"><button class="btn ghost" id="settingsBtn">${ic('settings','sm')}Settings</button>${!p.isDemo?`<button class="btn" id="loadDemo">${ic('user','sm')}Try demo student</button>`:''}<a class="btn primary" href="#/discover">${ic('compass','sm')}See my matches</a></div></div>
+  ${p.isDemo?`<div class="banner" style="margin-bottom:16px">${ic('info')}<div>This is <b>Alex Rivera</b>, a fictional demo student. <button class="btn sm" id="clearDemo" style="margin-left:6px">Start my own profile</button></div></div>`:''}
+  <div class="split">
+    <div class="stack">
+      <div class="card">
+        <div class="card-head"><h3>${ic('upload','sm')}Import from résumé</h3><span class="tiny faint">PDF, DOCX or TXT · read in your browser only</span></div>
+        <div class="drop" id="drop" tabindex="0" role="button" aria-label="Upload résumé">
+          <div style="color:var(--lime);margin-bottom:6px">${ic('upload','lg')}</div>
+          <div style="font-weight:600">Drop your résumé here or click to choose</div>
+          <div class="small muted">We’ll extract what we can — you review before anything is added.</div>
+          <input type="file" id="file" accept=".pdf,.docx,.txt,.md" hidden>
+        </div>
+        <details style="margin-top:12px"><summary class="small muted" style="cursor:pointer">Or paste résumé text</summary>
+          <textarea class="input" id="paste" rows="6" style="margin-top:8px" placeholder="Paste the text of your résumé…"></textarea>
+          <button class="btn sm" id="parsePaste" style="margin-top:8px">${ic('sparkle','sm')}Extract</button></details>
+        <div id="extract"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h3>${ic('user','sm')}Basics</h3></div>
+        <div class="grid g2">
+          ${fld('name','Full name',p.name)}${fld('email','Email',p.email,'email')}
+          ${fld('school','School or university',p.school)}
+          <div class="field"><label class="f" for="pf-eduLevel">Education level</label><select class="input" id="pf-eduLevel" data-pf="eduLevel"><option value="">Select…</option>${EDU_LEVELS.map(e=>`<option value="${e[0]}" ${p.eduLevel===e[0]?'selected':''}>${e[1]}</option>`).join('')}</select></div>
+          ${fld('gradYear','Graduation year',p.gradYear,'text','e.g. 2028')}${fld('location','Location',p.location,'text','City, State')}
+        </div>
+        ${fld('availability','Availability',p.availability,'text','e.g. 10 hrs/week during the school year')}
+        <div class="field"><label class="f">Work arrangements you’re open to</label><div class="chips">${Object.entries(ARR).map(([k,v])=>`<button class="chip tog ${p.arrangements.includes(k)?'on':''}" data-arr="${k}">${v}</button>`).join('')}</div></div>
+        <div class="grid g3">${fld('links.github','GitHub URL',p.links.github)}${fld('links.portfolio','Portfolio URL',p.links.portfolio)}${fld('links.linkedin','LinkedIn URL',p.links.linkedin)}</div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h3>${ic('target','sm')}Interests & skills</h3></div>
+        ${chipEditor('interests','Areas of interest',INTEREST_SUGG)}
+        ${chipEditor('skills','Skills',SKILL_DICT)}
+        <div class="field"><label class="f">Opportunity types you want</label><div class="chips">${CATEGORIES.map(c=>`<button class="chip tog ${p.categories.includes(c)?'on':''}" data-catp="${c}">${c}</button>`).join('')}</div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h3>${ic('code','sm')}Projects</h3><button class="btn sm" id="addProj">${ic('plus','sm')}Add project</button></div>
+        <p class="small muted" style="margin-bottom:12px">Class projects, personal builds and research all count. OPPAPP picks the most relevant one for each application.</p>
+        ${p.projects.length ? p.projects.map(pr=>`<div class="item"><div class="grow"><div class="t">${esc(pr.name)}${pr.role?` <span class="faint small">· ${esc(pr.role)}</span>`:''}</div><div class="d">${esc(pr.desc)}</div>${pr.skills?.length?`<div class="chips" style="margin-top:6px">${pr.skills.map(s=>`<span class="chip">${esc(s)}</span>`).join('')}</div>`:''}</div><button class="btn sm ghost icon-btn" data-editp="${pr.id}" aria-label="Edit">${ic('edit','sm')}</button><button class="btn sm ghost icon-btn" data-delp="${pr.id}" aria-label="Remove">${ic('trash','sm')}</button></div>`).join('') : `<p class="small faint">No projects yet.</p>`}
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h3>${ic('briefcase','sm')}Experience, volunteering & activities</h3><button class="btn sm" id="addExp">${ic('plus','sm')}Add</button></div>
+        ${p.experiences.length ? p.experiences.map(x=>`<div class="item"><div class="grow"><div class="row" style="gap:6px"><span class="badge">${esc(x.type)}</span><span class="t">${esc(x.title)}</span></div><div class="d">${esc([x.org,x.when].filter(Boolean).join(' · '))}</div>${x.desc?`<div class="d">${esc(x.desc)}</div>`:''}</div><button class="btn sm ghost icon-btn" data-edite="${x.id}" aria-label="Edit">${ic('edit','sm')}</button><button class="btn sm ghost icon-btn" data-dele="${x.id}" aria-label="Remove">${ic('trash','sm')}</button></div>`).join('') : `<p class="small faint">No formal experience is fine — projects and activities count.</p>`}
+      </div>
+    </div>
+
+    <div class="stack" style="position:sticky;top:82px">
+      <div class="card">
+        <div class="row between" style="margin-bottom:10px"><h3>Profile strength</h3><b class="mono" style="color:var(--lime)">${pc.pct}%</b></div>
+        <div class="progress"><i style="width:${pc.pct}%"></i></div>
+        ${pc.missing.length ? `<div class="small muted" style="margin-top:12px">Still missing:</div><div class="chips" style="margin-top:6px">${pc.missing.map(m=>`<span class="chip">${esc(m)}</span>`).join('')}</div>` : `<p class="small" style="margin-top:12px;color:var(--lime)">Your profile is complete.</p>`}
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>${ic('file','sm')}Documents</h3></div>
+        ${p.resumeName ? `<div class="item" style="margin:0"><div class="grow"><div class="t">${esc(p.resumeName)}</div><div class="d">Résumé · stays on this device</div></div><button class="btn sm ghost icon-btn" id="rmResume" aria-label="Remove résumé">${ic('trash','sm')}</button></div>` : `<p class="small muted">Upload a résumé above to attach it to applications.</p>`}
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>${ic('shield','sm')}Privacy</h3></div>
+        <p class="small muted" style="margin-bottom:12px">Your profile is saved only in this browser (localStorage). There is no account or server. Clearing it can’t be undone.</p>
+        <button class="btn sm danger" id="wipe">${ic('trash','sm')}Delete all my data</button>
+      </div>
+    </div>
+  </div>`;
+  // basics
+  $$('[data-pf]').forEach(el => el.addEventListener(el.tagName==='SELECT'?'change':'input', () => {
+    const k = el.dataset.pf; if (k.startsWith('links.')) S.profile.links[k.slice(6)] = el.value.trim(); else S.profile[k] = el.value;
+    save(); renderChrome(location.hash); refreshStrength();
+  }));
+  $$('[data-pf]').forEach(el => el.addEventListener('change', () => { if (el.dataset.pf==='name' || el.dataset.pf==='eduLevel') log('Updated profile'); }));
+  $$('[data-arr]').forEach(b => b.onclick = () => { const k=b.dataset.arr; p.arrangements = p.arrangements.includes(k) ? p.arrangements.filter(x=>x!==k) : [...p.arrangements,k]; save(); b.classList.toggle('on'); });
+  $$('[data-catp]').forEach(b => b.onclick = () => { const k=b.dataset.catp; p.categories = p.categories.includes(k) ? p.categories.filter(x=>x!==k) : [...p.categories,k]; save(); b.classList.toggle('on'); refreshStrength(); });
+  wireChips('interests'); wireChips('skills');
+  $('#addProj').onclick = () => projModal();
+  $$('[data-editp]').forEach(b => b.onclick = () => projModal(p.projects.find(x=>x.id===b.dataset.editp)));
+  $$('[data-delp]').forEach(b => b.onclick = () => { if(!confirm('Remove this project?'))return; p.projects = p.projects.filter(x=>x.id!==b.dataset.delp); save(); viewProfile(); });
+  $('#addExp').onclick = () => expModal();
+  $$('[data-edite]').forEach(b => b.onclick = () => expModal(p.experiences.find(x=>x.id===b.dataset.edite)));
+  $$('[data-dele]').forEach(b => b.onclick = () => { if(!confirm('Remove this entry?'))return; p.experiences = p.experiences.filter(x=>x.id!==b.dataset.dele); save(); viewProfile(); });
+  if ($('#rmResume')) $('#rmResume').onclick = () => { if(!confirm('Remove résumé from your profile?'))return; p.resumeName=''; save(); viewProfile(); };
+  $('#wipe').onclick = () => { if (!confirm('Delete your profile, saved opportunities, drafts and activity from this browser?')) return; localStorage.removeItem(KEY); S = defaultState(); toast('All data deleted','trash'); go('#/'); };
+  if ($('#loadDemo')) $('#loadDemo').onclick = () => { if (hasProfile() && !confirm('Replace your current profile with the demo student?')) return; loadDemo(); viewProfile(); };
+  if ($('#clearDemo')) $('#clearDemo').onclick = () => { S.profile = EMPTY_PROFILE(); save(); log('Started a new profile'); renderChrome(location.hash); viewProfile(); };
+  $('#settingsBtn').onclick = openSettings;
+  // résumé
+  const drop = $('#drop'), file = $('#file');
+  drop.onclick = () => file.click();
+  drop.onkeydown = e => { if (e.key==='Enter'||e.key===' ') { e.preventDefault(); file.click(); } };
+  drop.ondragover = e => { e.preventDefault(); drop.classList.add('over'); };
+  drop.ondragleave = () => drop.classList.remove('over');
+  drop.ondrop = e => { e.preventDefault(); drop.classList.remove('over'); if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]); };
+  file.onchange = () => file.files[0] && handleFile(file.files[0]);
+  $('#parsePaste').onclick = () => { const t = $('#paste').value.trim(); if (t.length<30) return toast('Paste a bit more text','alert'); showExtract(parseResume(t), null); };
+}
+function refreshStrength(){ const pc = profileCompletion(); const b = $('.progress > i'); if (b) b.style.width = pc.pct+'%'; const n = b && b.closest('.card').querySelector('.mono'); if (n) n.textContent = pc.pct+'%'; }
+function fld(key, label, val, type='text', ph=''){ return `<div class="field"><label class="f" for="pf-${key}">${label}</label><input class="input" id="pf-${key}" type="${type}" data-pf="${key}" value="${esc(val)}" placeholder="${esc(ph)}"></div>`; }
+function chipEditor(key, label, sugg){
+  const p = S.profile, have = p[key].map(lc);
+  return `<div class="field"><label class="f" for="add-${key}">${label}</label>
+    <div class="chips" id="chips-${key}" style="margin-bottom:8px">${p[key].map((v,i)=>`<span class="chip on">${esc(v)}<button data-rm="${key}" data-i="${i}" aria-label="Remove ${esc(v)}">${ic('x','sm')}</button></span>`).join('') || '<span class="tiny faint">None yet</span>'}</div>
+    <div class="row" style="flex-wrap:nowrap"><input class="input" id="add-${key}" placeholder="Type and press Enter" list="dl-${key}"><button class="btn sm" data-add="${key}">${ic('plus','sm')}Add</button></div>
+    <datalist id="dl-${key}">${sugg.filter(s=>!have.includes(lc(s))).map(s=>`<option value="${esc(s)}">`).join('')}</datalist>
+    <div class="chips" style="margin-top:8px">${sugg.filter(s=>!have.includes(lc(s))).slice(0,8).map(s=>`<button class="chip tog" data-sugg="${key}" data-v="${esc(s)}">${ic('plus','sm')}${esc(s)}</button>`).join('')}</div></div>`;
+}
+function wireChips(key){
+  const add = v => { v = v.trim(); if (!v) return; if (S.profile[key].map(lc).includes(lc(v))) return toast('Already added','info'); S.profile[key].push(v); save(); viewProfile(); setTimeout(()=>$('#add-'+key)?.focus(),0); };
+  $('#add-'+key).onkeydown = e => { if (e.key==='Enter') { e.preventDefault(); add(e.target.value); } };
+  $(`[data-add="${key}"]`).onclick = () => add($('#add-'+key).value);
+  $$(`[data-sugg="${key}"]`).forEach(b => b.onclick = () => add(b.dataset.v));
+  $$(`[data-rm="${key}"]`).forEach(b => b.onclick = () => { S.profile[key].splice(+b.dataset.i,1); save(); viewProfile(); });
+}
+function projModal(pr){
+  modal(`<h3>${pr?'Edit':'Add'} project</h3><p class="muted small" style="margin-bottom:14px">Describe what you actually did — drafts will quote this.</p>
+    <div class="field"><label class="f" for="pmN">Project name *</label><input class="input" id="pmN" value="${esc(pr?.name)}"></div>
+    <div class="field"><label class="f" for="pmR">Your role / context</label><input class="input" id="pmR" value="${esc(pr?.role)}" placeholder="e.g. Solo, team of 3, class project"></div>
+    <div class="field"><label class="f" for="pmD">What you did *</label><textarea class="input" id="pmD" rows="4">${esc(pr?.desc)}</textarea></div>
+    <div class="field"><label class="f" for="pmS">Skills used (comma separated)</label><input class="input" id="pmS" value="${esc((pr?.skills||[]).join(', '))}"></div>
+    <div class="row" style="justify-content:flex-end"><button class="btn ghost" id="pmC">Cancel</button><button class="btn primary" id="pmSave">Save project</button></div>`);
+  $('#pmC').onclick = closeModal;
+  $('#pmSave').onclick = () => {
+    const n=$('#pmN').value.trim(), d=$('#pmD').value.trim(); if (!n||!d) return toast('Add a name and description','alert');
+    const obj = { id:pr?.id||uid(), name:n, role:$('#pmR').value.trim(), desc:d, skills:$('#pmS').value.split(',').map(s=>s.trim()).filter(Boolean) };
+    if (pr) Object.assign(pr, obj); else S.profile.projects.push(obj);
+    obj.skills.forEach(s => { if (!S.profile.skills.map(lc).includes(lc(s))) S.profile.skills.push(s); });
+    log(`${pr?'Updated':'Added'} project: ${n}`); save(); closeModal(); toast('Project saved'); viewProfile();
+  };
+}
+function expModal(x){
+  modal(`<h3>${x?'Edit':'Add'} experience</h3>
+    <div class="field"><label class="f" for="emT">Type</label><select class="input" id="emT">${['Research','Work','Volunteering','Extracurricular','Leadership','Certification','Coursework'].map(t=>`<option ${x?.type===t?'selected':''}>${t}</option>`).join('')}</select></div>
+    <div class="field"><label class="f" for="emTi">Title *</label><input class="input" id="emTi" value="${esc(x?.title)}"></div>
+    <div class="grid g2"><div class="field"><label class="f" for="emO">Organization</label><input class="input" id="emO" value="${esc(x?.org)}"></div><div class="field"><label class="f" for="emW">When</label><input class="input" id="emW" value="${esc(x?.when)}" placeholder="e.g. 2025 – present"></div></div>
+    <div class="field"><label class="f" for="emD">Description</label><textarea class="input" id="emD" rows="3">${esc(x?.desc)}</textarea></div>
+    <div class="row" style="justify-content:flex-end"><button class="btn ghost" id="emC">Cancel</button><button class="btn primary" id="emS">Save</button></div>`);
+  $('#emC').onclick = closeModal;
+  $('#emS').onclick = () => { const t=$('#emTi').value.trim(); if(!t) return toast('Add a title','alert');
+    const obj = { id:x?.id||uid(), type:$('#emT').value, title:t, org:$('#emO').value.trim(), when:$('#emW').value.trim(), desc:$('#emD').value.trim() };
+    if (x) Object.assign(x,obj); else S.profile.experiences.push(obj); log(`${x?'Updated':'Added'} experience: ${t}`); save(); closeModal(); toast('Saved'); viewProfile(); };
+}
+function loadDemo(){ S.profile = DEMO_PROFILE(); log('Loaded the demo student profile'); save(); toast('Demo student loaded','user'); renderChrome(location.hash); }
+function openSettings(){
+  modal(`<h3>${ic('sparkle')} Gemini drafting (optional)</h3>
+    <p class="muted small" style="margin-bottom:14px">OPPAPP works fully without AI using profile-grounded templates. To draft emails with Google Gemini, add your own API key. It’s stored only in this browser and sent only to Google’s API — don’t use this on a shared computer.</p>
+    <div class="field"><label class="f" for="gk">Gemini API key</label><input class="input" id="gk" type="password" value="${esc(S.settings.geminiKey)}" placeholder="AIza…" autocomplete="off"></div>
+    <div class="field"><label class="f" for="gm">Model</label><input class="input" id="gm" value="${esc(S.settings.model)}"></div>
+    <div class="row" style="justify-content:space-between"><button class="btn ghost danger" id="gClear">Remove key</button><div class="row"><button class="btn ghost" id="gC">Cancel</button><button class="btn primary" id="gS">Save</button></div></div>`);
+  $('#gC').onclick = closeModal;
+  $('#gClear').onclick = () => { S.settings.geminiKey=''; save(); closeModal(); toast('Key removed','key'); render(); };
+  $('#gS').onclick = () => { S.settings.geminiKey=$('#gk').value.trim(); S.settings.model=$('#gm').value.trim()||'gemini-2.5-flash'; save(); closeModal(); toast(S.settings.geminiKey?'Gemini enabled':'Saved','key'); render(); };
+}
+
+/* ---------- résumé ingestion (client-side, deterministic) ---------- */
+function loadScript(src){ return new Promise((res, rej) => { if ($(`script[src="${src}"]`)) return res(); const s=document.createElement('script'); s.src=src; s.onload=res; s.onerror=()=>rej(new Error('load failed')); document.head.appendChild(s); }); }
+async function handleFile(f){
+  const ok = /\.(pdf|docx|txt|md)$/i.test(f.name);
+  if (!ok) return toast('Use a PDF, DOCX or TXT file','alert');
+  if (f.size > 5*1024*1024) return toast('File is over 5 MB','alert');
+  $('#extract').innerHTML = `<div class="row muted small" style="margin-top:14px"><span class="spin"></span>Reading ${esc(f.name)}…</div>`;
+  try {
+    let text = '';
+    if (/\.pdf$/i.test(f.name)) {
+      await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      const pdf = await pdfjsLib.getDocument({data: await f.arrayBuffer()}).promise;
+      for (let i=1;i<=Math.min(pdf.numPages,5);i++){ const pg = await pdf.getPage(i); const c = await pg.getTextContent(); let lastY=null; c.items.forEach(it=>{ const y=it.transform[5]; text += (lastY!==null && Math.abs(y-lastY)>2 ? '\n' : ' ') + it.str; lastY=y; }); text+='\n'; }
+    } else if (/\.docx$/i.test(f.name)) {
+      await loadScript('https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js');
+      text = (await mammoth.extractRawText({arrayBuffer: await f.arrayBuffer()})).value;
+    } else text = await f.text();
+    if (text.trim().length < 30) throw new Error('empty');
+    showExtract(parseResume(text), f.name);
+  } catch(e) {
+    $('#extract').innerHTML = `<div class="banner red" style="margin-top:14px">${ic('alert')}<div>We couldn’t read that file (it may be scanned or image-only). Paste the text instead, or fill in your profile manually below.</div></div>`;
+  }
+}
+function parseResume(t){
+  const out = { fields:{}, skills:[], interests:[], projects:[] };
+  const email = t.match(/[\w.+-]+@[\w-]+\.[\w.-]+/); if (email) out.fields.email = email[0];
+  const gh = t.match(/github\.com\/[\w-]+/i); if (gh) out.fields['links.github'] = 'https://' + gh[0];
+  const li = t.match(/linkedin\.com\/in\/[\w-]+/i); if (li) out.fields['links.linkedin'] = 'https://' + li[0];
+  const lines = t.split(/\n/).map(l=>l.trim()).filter(Boolean);
+  const nameLine = lines.find(l => /^[A-Z][a-zA-Z'’-]+(\s[A-Z][a-zA-Z'’.-]+){1,3}$/.test(l) && l.length<40);
+  if (nameLine) out.fields.name = nameLine;
+  const school = lines.find(l => /(university|college|high school|institute|academy)/i.test(l) && l.length<110);
+  if (school) out.fields.school = school.replace(/\s{2,}.*/,'').replace(/[,|–-]\s*(19|20)\d\d.*$/,'').trim();
+  if (/high school/i.test(t) && !/(university|college)/i.test(t)) out.fields.eduLevel = 'high school';
+  else if (/(ph\.?d|master|m\.s\.|graduate student)/i.test(t)) out.fields.eduLevel = 'graduate';
+  else if (/(university|college|b\.s\.|b\.a\.|bachelor|undergraduate)/i.test(t)) out.fields.eduLevel = 'undergraduate';
+  const years = (t.match(/(?:expected|graduat\w*|class of|anticipated)[^\n]{0,30}?(20\d\d)/i)||[])[1]; if (years) out.fields.gradYear = years;
+  const low = ' '+lc(t).replace(/[^a-z0-9+#.\s-]/g,' ')+' ';
+  out.skills = SKILL_DICT.filter(s => { const n=lc(s); if (n.length<=2) return new RegExp(`[\\s,(/]${n.replace(/[+#.]/g,'\\$&')}[\\s,)/]`).test(low) && (n!=='c' && n!=='r' ? true : new RegExp(`(languages|skills)[^\\n]{0,80}\\b${n}\\b`,'i').test(t)); return low.includes(' '+n.replace(/\s+/g,' ')) ; }).filter(s => !S.profile.skills.map(lc).includes(lc(s)));
+  out.interests = INTEREST_SUGG.filter(s => low.includes(lc(s))).filter(s=>!S.profile.interests.map(lc).includes(lc(s)));
+  // Projects section
+  const idx = lines.findIndex(l => /^(projects?|personal projects|selected projects|research projects?)\s*:?$/i.test(l));
+  if (idx>=0) {
+    const sect = []; for (let i=idx+1;i<lines.length;i++){ if (/^(experience|education|skills|work|volunteer|activities|leadership|awards|honors|certifications|publications|languages)\b.*:?$/i.test(lines[i]) && lines[i].length<40) break; sect.push(lines[i]); }
+    let cur = null;
+    sect.forEach(l => { const bullet = /^[•\-–*▪●◦]/.test(l); const clean = l.replace(/^[•\-–*▪●◦]\s*/,'');
+      if (!bullet && clean.length<90) { cur && out.projects.push(cur); cur = {name:clean.replace(/\s*[|–-]\s*(19|20)\d\d.*$/,''), desc:'', skills:[]}; }
+      else if (cur) cur.desc += (cur.desc?' ':'') + clean; });
+    cur && out.projects.push(cur);
+    out.projects = out.projects.filter(p=>p.desc).slice(0,5).map(p => ({...p, id:uid(), role:'', skills: SKILL_DICT.filter(s=>s.length>2 && lc(p.desc+' '+p.name).includes(lc(s)))}));
+  }
+  Object.keys(out.fields).forEach(k => { const cur = k.startsWith('links.') ? S.profile.links[k.slice(6)] : S.profile[k]; if (cur && cur!=='https://github.com/' && cur===out.fields[k]) delete out.fields[k]; });
+  return out;
+}
+const FIELD_LABELS = {name:'Name',email:'Email',school:'School',eduLevel:'Education level',gradYear:'Graduation year','links.github':'GitHub','links.linkedin':'LinkedIn'};
+function showExtract(x, fname){
+  const fieldRows = Object.entries(x.fields).map(([k,v]) => { const cur = k.startsWith('links.') ? S.profile.links[k.slice(6)] : S.profile[k]; const conflict = cur && cur!=='https://github.com/' && cur!==v;
+    return `<label class="extract-item"><input type="checkbox" data-xf="${k}" ${conflict?'':'checked'}><div><b>${FIELD_LABELS[k]}:</b> ${esc(k==='eduLevel'?labelEdu(v):v)}${conflict?`<div class="tiny" style="color:var(--amber)">Would replace “${esc(cur)}” — unchecked by default</div>`:''}</div></label>`; }).join('');
+  const total = Object.keys(x.fields).length + x.skills.length + x.interests.length + x.projects.length;
+  $('#extract').innerHTML = `<div class="card tight" style="margin-top:14px;background:var(--surface-2)">
+    <div class="card-head"><h3>${ic('sparkle','sm')}Review what we found</h3><span class="tiny faint">Rule-based extraction · nothing saved yet</span></div>
+    ${!total ? `<p class="small muted">We couldn’t find new details. Add them manually below.</p>` : `
+    ${fieldRows}
+    ${x.skills.length?`<div class="extract-item" style="display:block"><div class="small" style="margin-bottom:6px"><b>Skills</b> <span class="faint">(click to deselect)</span></div><div class="chips">${x.skills.map(s=>`<button class="chip tog on" data-xs="${esc(s)}">${esc(s)}</button>`).join('')}</div></div>`:''}
+    ${x.interests.length?`<div class="extract-item" style="display:block"><div class="small" style="margin-bottom:6px"><b>Interests</b></div><div class="chips">${x.interests.map(s=>`<button class="chip tog on" data-xi="${esc(s)}">${esc(s)}</button>`).join('')}</div></div>`:''}
+    ${x.projects.map((p,i)=>`<label class="extract-item"><input type="checkbox" data-xp="${i}" checked><div><b>Project:</b> ${esc(p.name)}<div class="tiny muted">${esc(p.desc.slice(0,160))}${p.desc.length>160?'…':''}</div></div></label>`).join('')}
+    <div class="row" style="margin-top:12px;justify-content:flex-end"><button class="btn sm ghost" id="xCancel">Discard</button><button class="btn sm primary" id="xAdd">${ic('check','sm')}Add selected to profile</button></div>`}
+  </div>`;
+  if (!total) { if (fname) { S.profile.resumeName = fname; save(); } return; }
+  $$('[data-xs],[data-xi]').forEach(b => b.onclick = () => b.classList.toggle('on'));
+  $('#xCancel').onclick = () => $('#extract').innerHTML = '';
+  $('#xAdd').onclick = () => {
+    const p = S.profile;
+    $$('[data-xf]').forEach(c => { if (!c.checked) return; const k=c.dataset.xf; if (k.startsWith('links.')) p.links[k.slice(6)] = x.fields[k]; else p[k] = x.fields[k]; });
+    $$('[data-xs].on').forEach(b => p.skills.push(b.dataset.xs));
+    $$('[data-xi].on').forEach(b => p.interests.push(b.dataset.xi));
+    $$('[data-xp]').forEach(c => { if (c.checked) p.projects.push(x.projects[+c.dataset.xp]); });
+    if (fname) p.resumeName = fname;
+    p.isDemo = false;
+    log(`Imported details from ${fname||'pasted résumé'}`); save(); toast('Added to your profile'); renderChrome(location.hash); viewProfile();
+  };
+}
+
+/* ---------- boot ---------- */
+render();
+</script>
+</body>
+</html>
