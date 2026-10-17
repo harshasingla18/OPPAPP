@@ -754,17 +754,7 @@ function viewLanding(){
       .map(s=>`<div class="step"><div class="n">${s[0]}</div><h3>${s[1]}</h3><p>${s[2]}</p></div>`).join('')}
   </div>
 
-  <div class="section-title"><div class="eyebrow">Built on trust</div><h2>Honest by design</h2></div>
-  <div class="principles">
-    <div class="principle"><div class="ic">${ic('link')}</div><h3>Every listing has a source</h3><p>Real opportunities link to their official page. Demo listings are labeled as demo. Unknown dates and rules stay marked unknown.</p></div>
-    <div class="principle"><div class="ic">${ic('layers')}</div><h3>Fit, not a magic number</h3><p>Interest, eligibility, skills, location and deadline are checked separately and explained in plain language.</p></div>
-    <div class="principle"><div class="ic">${ic('shield')}</div><h3>You stay in control</h3><p>Drafts only use facts from your profile. Nothing is ever sent or submitted for you — you review and send.</p></div>
-  </div>
-
-  <div class="cta-band">
-    <h2>Opportunity shouldn’t depend on who you already know.</h2>
-    <a class="btn lg" href="${hasProfile()?'#/dashboard':'#/profile'}">Find My Opportunities ${ic('arrowR')}</a>
-  </div>`;
+`;
 }
 function aRow(kind, icon, title, text){ return `<div class="assess-row"><div class="ic ${kind}">${ic(icon,'sm')}</div><div><h4>${esc(title)}</h4><p>${esc(text)}</p></div></div>`; }
 
