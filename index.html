@@ -225,8 +225,6 @@ select.input{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
 /* ---------- landing ---------- */
 .hero{position:relative;padding:72px 0 40px;text-align:center;overflow:hidden}
 .hero::before{content:"";position:absolute;inset:-200px -100px auto;height:520px;background:radial-gradient(closest-side,rgba(110,168,255,.14),transparent 70%);pointer-events:none}
-.hero-pill{display:inline-flex;align-items:center;gap:8px;padding:6px 14px 6px 6px;border-radius:999px;border:1px solid var(--border-2);background:var(--surface);font-size:13px;color:var(--muted);margin-bottom:22px}
-.hero-pill b{background:var(--fill);color:var(--lime-ink);padding:2px 9px;border-radius:999px;font-size:11.5px}
 .hero h1{position:relative;font-size:clamp(38px,6.4vw,72px);font-weight:700;letter-spacing:-.04em;max-width:920px;margin:0 auto}
 .hero h1 em{font-style:normal;color:var(--lime)}
 .hero p.lead{position:relative;max-width:620px;margin:22px auto 30px;color:var(--muted);font-size:18px}
@@ -690,7 +688,6 @@ function viewLanding(){
   const m = match(sample, DEMO_PROFILE());
   $('#app').innerHTML = `
   <section class="hero">
-    <div class="hero-pill"><b>NEW</b> Discovery + applications in one workflow</div>
     <h1>It’s out there. <em>Find it here.</em></h1>
     <p class="lead">Discover internships, research positions, student teams, volunteering, and more. Build your profile once, find opportunities that fit, and prepare personalized applications in one place.</p>
     <div class="row">
