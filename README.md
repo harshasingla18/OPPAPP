@@ -1,37 +1,61 @@
 # OPPAPP — The Opportunity App
 
-**Find your next opportunity. We'll help you get there.**
+**It's out there. Find it here.**
 
-OPPAPP helps students discover opportunities — research, internships, student teams, volunteering, open source, competitions — understand whether they fit, prepare personalized applications from one reusable profile, and track everything through to follow-up.
+OPPAPP helps students discover opportunities they qualify for, turn their experiences into compelling applications, and keep moving forward. It connects opportunity discovery directly to application readiness and progress tracking — it isn't another internship directory, résumé generator or chatbot.
 
-Built at **DubHacks '26**.
+Built at **DubHacks '26** · Title track: **Cook Smarter**.
 
-## The workflow
+## The demo journey
 
-Student profile → real opportunities → eligibility-aware matching → personalized application preparation → user review → application tracking
+1. Upload a résumé → Gemini extracts a structured profile, citing the résumé line behind every item.
+2. Review and approve — nothing is saved until you check it; items Gemini can't trace to the résumé start unchecked.
+3. Discover source-linked opportunities (real programs + clearly labeled demo listings).
+4. See your fit: rule-based checks plus a Gemini explanation that separates **confirmed**, **possible**, **unknown** and **gap**.
+5. Prepare an application: outreach / research-inquiry emails, statements of interest, experience summaries and form answers.
+6. Review: any statement the server can't trace to your profile is flagged and blocks "I submitted this" until you fix or confirm it.
+7. Track: Interested → Submitted → Interview → Accepted / Rejected / Withdrawn, with deadlines, follow-ups, notes, search and filters.
 
-## Features
+## Architecture
 
-- **Reusable student profile** — import from a résumé (PDF, DOCX, TXT or pasted text), review every extracted field before it's added, or enter details manually. Projects, coursework and volunteering all count as experience.
-- **Discovery** — search, category chips, and filters for education level, work arrangement, compensation, skill, deadline, eligibility and listing type.
-- **Explainable matching** — interest, stated eligibility, skills, location, deadline and missing information are evaluated separately and explained in plain language. No opaque "fit %".
-- **Application workspace** — personalized outreach emails and form answers grounded only in the student's profile, with each field labeled *from profile*, *drafted*, or *needs you*. A readiness checklist flags missing information.
-- **Tracker** — statuses, deadlines, follow-up dates and notes. An application is only marked submitted when the student confirms they sent it.
-- **Optional Gemini drafting** — bring your own API key (stored only in your browser).
+```
+index.html            single-page app (vanilla JS), data in localStorage
+api/health.js         GET  — is Gemini configured? (never returns the key)
+api/parse-resume.js   POST — résumé text → profile items with evidence
+api/match.js          POST — profile + opportunity → explained fit
+api/draft.js          POST — grounded drafts + unsupported-claim flags
+lib/gemini.js         server-side Gemini REST client (structured JSON output)
+lib/grounding.js      evidence checks + unsupported skill/credential/figure scan
+lib/input.js          input cleaning, size limits, untrusted-content wrapper
+lib/http.js           method/CORS/rate-limit/error handling (no payload logging)
+tests/                node --test unit + API tests (Gemini stubbed)
+scripts/dev-server.mjs  local server that mirrors Vercel routing
+```
 
-## Trust principles
+### AI safeguards (and their limits)
 
-- Real programs link to their official page; details are summarized and marked "confirm on source". Unknown dates and rules stay marked unknown.
-- Demo listings use fictional organizations and are clearly labeled.
-- OPPAPP never guesses email addresses, never sends email, and never submits applications.
-- All data stays in the browser (localStorage). No account, no server.
+- The Gemini key lives only in server environment variables.
+- Opportunity text and résumés are wrapped as untrusted data; the model is told not to follow instructions inside them.
+- Every AI claim must cite profile evidence; the server verifies citations and downgrades or flags what it can't find.
+- A heuristic scan flags skills, awards, publications, grades and figures that aren't in the profile.
+- Contact details from résumé parsing must appear verbatim in the résumé or they're dropped.
+- Phone numbers and LinkedIn URLs are never sent to the AI.
+- The student must review, and the app never sends email or submits applications.
 
-## Run it
+These checks are heuristics: they catch common unsupported claims but can't prove a draft is accurate, which is why human review stays mandatory.
 
-It's a single static file — open `index.html` in a browser, or serve it with GitHub Pages (Settings → Pages → Deploy from branch → `main` / root).
+## Run locally
 
-**Demo:** click **Try demo student** on the profile page, open the *Computational Neuroscience* research volunteer listing, click **Prepare Application**, review the draft, and track it in **My Applications**.
+```bash
+cp .env.example .env      # add GEMINI_API_KEY
+npm run dev               # http://localhost:3000
+npm test                  # 17 tests, no network needed
+```
 
-## Tech
+Without a key the app still works end to end using rule-based extraction and template drafts, and shows "AI offline".
 
-Vanilla HTML/CSS/JS in one file. pdf.js and mammoth.js load on demand from cdnjs for résumé import. Optional Gemini API for drafting.
+## Deploy
+
+**Vercel (full app with Gemini):** import this repo at vercel.com/new, add `GEMINI_API_KEY` under Environment Variables, deploy. No build step.
+
+**GitHub Pages (static fallback):** serves `index.html` only. To let it use the AI server, set `<meta name="oppapp-api" content="https://YOUR-APP.vercel.app">` in `index.html` and add the Pages origin to `ALLOWED_ORIGINS` on Vercel.
