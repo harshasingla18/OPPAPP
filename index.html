@@ -697,8 +697,6 @@ function renderChrome(h){
    VIEW: LANDING
    ========================================================= */
 function viewLanding(){
-  const sample = OPPS.find(o=>o.id==='demo-neuro');
-  const m = match(sample, DEMO_PROFILE());
   $('#app').innerHTML = `
   <section class="hero">
     <h1>It’s out there. <em>Find it here.</em></h1>
@@ -708,32 +706,6 @@ function viewLanding(){
       <a class="btn lg" href="#/discover">Explore Opportunities</a>
     </div>
   </section>
-
-  <div class="preview" aria-label="Product preview">
-    <div class="preview-bar"><i></i><i></i><i></i></div>
-    <div class="grid g3 preview-grid">
-      ${oppCard(sample, m, {preview:true})}
-      <div class="card tight">
-        <div class="eyebrow" style="margin-bottom:10px">Why this fits</div>
-        <div class="assess">
-          ${aRow('ok','target','Interest','Neuroscience, machine learning')}
-          ${aRow('ok','code','Skills','Python required — you have it')}
-          ${aRow('ok','graduation','Eligibility','Listing says undergraduates')}
-        </div>
-      </div>
-      <div class="card tight">
-        <div class="eyebrow" style="margin-bottom:10px">Application</div>
-        <div class="checklist small">
-          <div class="cl ok">${ic('checkCircle','sm')}Email drafted from your profile</div>
-          <div class="cl ok">${ic('checkCircle','sm')}Résumé attached</div>
-          <div class="cl warn">${ic('alert','sm')}Recipient address needed</div>
-          <div class="cl warn">${ic('alert','sm')}Awaiting your review</div>
-        </div>
-        <div class="divider"></div>
-        <span class="badge b-amber"><span class="dot"></span>Needs information</span>
-      </div>
-    </div>
-  </div>
 
   <section class="pun" aria-label="What OPPAPP means">
     <div class="pun-eyebrow">Why the name</div>
