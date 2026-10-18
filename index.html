@@ -570,10 +570,10 @@ const DEMO_PROFILE = () => ({
 });
 let S = load();
 function load(){
-  try { const s = JSON.parse(localStorage.getItem(KEY)); if(s && s.profile) return Object.assign(defaultState(), s); } catch {}
+  try { const s = JSON.parse(localStorage.getItem(KEY)); if(s && s.profile) { if (s.settings && (!s.settings.model || /^gemini-(1|2)\./.test(s.settings.model))) s.settings.model = 'gemini-3.8-flash'; return Object.assign(defaultState(), s); } } catch {}
   return defaultState();
 }
-function defaultState(){ return { profile:EMPTY_PROFILE(), saved:[], apps:{}, activity:[], settings:{geminiKey:'', model:'gemini-2.5-flash'} }; }
+function defaultState(){ return { profile:EMPTY_PROFILE(), saved:[], apps:{}, activity:[], settings:{geminiKey:'', model:'gemini-3.8-flash'} }; }
 function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {} }
 function log(text){ S.activity.unshift({ts:Date.now(), text}); S.activity = S.activity.slice(0,40); save(); }
 const hasProfile = () => !!(S.profile.name || S.profile.skills.length || S.profile.interests.length);
@@ -1067,7 +1067,7 @@ function templateFree(kind, o, p = S.profile){
 /* Optional Gemini — key stays in this browser, user must opt in. */
 async function geminiDraft(prompt){
   const key = S.settings.geminiKey; if (!key) throw new Error('No API key');
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(S.settings.model||'gemini-2.5-flash')}:generateContent`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(S.settings.model||'gemini-3.8-flash')}:generateContent`;
   const res = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json','x-goog-api-key':key}, body: JSON.stringify({ contents:[{role:'user',parts:[{text:prompt}]}], generationConfig:{ temperature:0.5, responseMimeType:'application/json' } }) });
   if (!res.ok) throw new Error(`Gemini error ${res.status}`);
   const j = await res.json();
@@ -1462,7 +1462,7 @@ function openSettings(){
     <div class="row" style="justify-content:space-between"><button class="btn ghost danger" id="gClear">Remove key</button><div class="row"><button class="btn ghost" id="gC">Cancel</button><button class="btn primary" id="gS">Save</button></div></div>`);
   $('#gC').onclick = closeModal;
   $('#gClear').onclick = () => { S.settings.geminiKey=''; save(); closeModal(); toast('Key removed','key'); render(); };
-  $('#gS').onclick = () => { S.settings.geminiKey=$('#gk').value.trim(); S.settings.model=$('#gm').value.trim()||'gemini-2.5-flash'; save(); closeModal(); toast(S.settings.geminiKey?'Gemini enabled':'Saved','key'); render(); };
+  $('#gS').onclick = () => { S.settings.geminiKey=$('#gk').value.trim(); S.settings.model=$('#gm').value.trim()||'gemini-3.8-flash'; save(); closeModal(); toast(S.settings.geminiKey?'Gemini enabled':'Saved','key'); render(); };
 }
 
 /* ---------- résumé ingestion (client-side, deterministic) ---------- */
