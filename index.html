@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>OPPAPP — The Opportunity App</title>
+<!-- Set content to your Vercel URL (e.g. https://oppapp.vercel.app) so the GitHub Pages copy can use the AI server. Leave empty when served from Vercel. -->
+<meta name="oppapp-api" content="">
 <meta name="description" content="Find your next opportunity. We'll help you get there. Discover internships, research, student teams and more, then prepare personalized applications in one place.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -327,7 +329,7 @@ footer .in{max-width:1200px;margin:0 auto;padding:22px 20px;display:flex;justify
 </header>
 <main id="app" tabindex="-1"></main>
 <nav class="mobile-nav" id="mnav" aria-label="Mobile"></nav>
-<footer><div class="in"><span>OPPAPP — The Opportunity App · Built at DubHacks ’26</span><span>Your data stays in this browser. Nothing is sent or submitted without you.</span></div></footer>
+<footer><div class="in"><span>OPPAPP — The Opportunity App · Built at DubHacks ’26</span><span>Your profile is saved in this browser. It’s only sent to Gemini when you use an AI feature. Nothing is submitted without you.</span></div></footer>
 <div class="toast-wrap" id="toasts" aria-live="polite"></div>
 <div id="modalRoot"></div>
 
@@ -545,8 +547,10 @@ const CATEGORIES = ['Internship','Research','Student teams','Volunteering','Open
 const CAT_ICON = {'Internship':'briefcase','Research':'beaker','Student teams':'users','Volunteering':'heart','Open source':'code','Competitions':'trophy','Mentorship':'users','Fellowships':'star','Scholarships':'graduation','Summer programs':'calendar','University programs':'graduation'};
 const EDU_LEVELS = [['high school','High school'],['undergraduate','Undergraduate'],['graduate','Graduate'],['other','Other / not in school']];
 const ARR = {remote:'Remote', hybrid:'Hybrid', 'in-person':'In person'};
-const STATUSES = ['Saved','Researching','In progress','Needs information','Ready for review','Submitted','Follow-up due','Interview','Accepted','Declined','Closed'];
-const STATUS_CLS = {'Saved':'','Researching':'b-sky','In progress':'b-sky','Needs information':'b-amber','Ready for review':'b-lime','Submitted':'b-lime','Follow-up due':'b-amber','Interview':'b-lime','Accepted':'b-lime','Declined':'b-red','Closed':''};
+const STATUSES = ['Interested','Saved','Researching','In progress','Needs information','Ready for review','Submitted','Follow-up due','Interview','Accepted','Rejected','Withdrawn','Closed'];
+const CLOSED = ['Accepted','Rejected','Withdrawn','Closed'];
+const SUBMITTED = ['Submitted','Follow-up due','Interview'];
+const STATUS_CLS = {'Saved':'','Researching':'b-sky','In progress':'b-sky','Needs information':'b-amber','Ready for review':'b-lime','Submitted':'b-lime','Follow-up due':'b-amber','Interview':'b-lime','Accepted':'b-lime','Rejected':'b-red','Withdrawn':'','Closed':'','Interested':'b-sky'};
 
 /* =========================================================
    STATE (persisted to this browser only)
@@ -570,10 +574,10 @@ const DEMO_PROFILE = () => ({
 });
 let S = load();
 function load(){
-  try { const s = JSON.parse(localStorage.getItem(KEY)); if(s && s.profile) return Object.assign(defaultState(), s); } catch {}
+  try { const s = JSON.parse(localStorage.getItem(KEY)); if(s && s.profile) { delete s.settings; Object.values(s.apps||{}).forEach(a => { if (a.status==='Declined') a.status='Rejected'; }); return Object.assign(defaultState(), s); } } catch {}
   return defaultState();
 }
-function defaultState(){ return { profile:EMPTY_PROFILE(), saved:[], apps:{}, activity:[], settings:{geminiKey:'', model:'gemini-2.5-flash'} }; }
+function defaultState(){ return { profile:EMPTY_PROFILE(), saved:[], apps:{}, activity:[], aiMatch:{} }; }
 function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {} }
 function log(text){ S.activity.unshift({ts:Date.now(), text}); S.activity = S.activity.slice(0,40); save(); }
 const hasProfile = () => !!(S.profile.name || S.profile.skills.length || S.profile.interests.length);
@@ -690,7 +694,7 @@ function renderChrome(h){
   $('#mnav').innerHTML = links.map(([l,t,i]) => `<a href="${l}" class="${on(l)?'on':''}">${ic(i)}${t.replace('My ','')}</a>`).join('');
   const landing = h==='#/' || h==='#' || h==='';
   document.body.classList.toggle('landing-only', landing);
-  $('#topRight').innerHTML = landing ? '' : `${S.profile.isDemo?'<span class="badge b-demo" title="You are using the fictional demo student">Demo student</span>':''}<a class="avatar" href="#/profile" title="My profile">${esc(initials(S.profile.name)||'?')}</a>`;
+  $('#topRight').innerHTML = landing ? '' : `${AI.checked?`<span class="badge ${AI.ready?'b-sky':'b-demo'}" title="${AI.ready?'Gemini is connected through the OPPAPP server':'AI server not connected — rule-based and template features still work'}">${ic('sparkle','sm')}${AI.ready?'Gemini on':'AI offline'}</span>`:''}${S.profile.isDemo?'<span class="badge b-demo" title="You are using the fictional demo student">Demo student</span>':''}<a class="avatar" href="#/profile" title="My profile">${esc(initials(S.profile.name)||'?')}</a>`;
 }
 
 /* =========================================================
@@ -818,8 +822,8 @@ function viewDashboard(){
   const p = S.profile, pc = profileCompletion();
   const ranked = OPPS.map(o=>({o, m:match(o)})).filter(x=>x.m.elig.status!=='not-met' && x.m.deadline.status!=='passed').sort((a,b)=>b.m.score-a.m.score);
   const apps = Object.values(S.apps);
-  const attention = apps.filter(a => ['Needs information','Ready for review','Follow-up due'].includes(a.status) || (a.followUp && daysUntil(a.followUp)<=0 && !['Accepted','Declined','Closed'].includes(a.status)));
-  const deadlines = apps.map(a=>({a,o:OPP(a.id)})).filter(x=>x.o.deadline && daysUntil(x.o.deadline)>=0 && !['Submitted','Accepted','Declined','Closed','Interview'].includes(x.a.status)).sort((a,b)=>a.o.deadline.localeCompare(b.o.deadline));
+  const attention = apps.filter(a => ['Needs information','Ready for review','Follow-up due'].includes(a.status) || (a.followUp && daysUntil(a.followUp)<=0 && !CLOSED.includes(a.status)));
+  const deadlines = apps.map(a=>({a,o:OPP(a.id)})).filter(x=>x.o.deadline && daysUntil(x.o.deadline)>=0 && ![...SUBMITTED,...CLOSED].includes(x.a.status)).sort((a,b)=>a.o.deadline.localeCompare(b.o.deadline));
   const hr = new Date().getHours(); const greet = hr<5?'Up late':hr<12?'Good morning':hr<18?'Good afternoon':'Good evening';
   const nexts = [];
   if (pc.pct < 100) nexts.push(['user', `Complete your profile (${pc.missing.slice(0,2).join(', ')}${pc.missing.length>2?'…':''})`, '#/profile']);
@@ -988,7 +992,7 @@ function viewDetail(id){
         </dl>
       </div>
     </div>
-    <div class="stack" style="position:sticky;top:82px">
+    <div class="stack">
       <div class="card">
         <div class="card-head"><h3>${ic('target','sm')}Your fit</h3>${!hasProfile()?'':''}</div>
         ${!hasProfile() ? emptyState('user','Add your profile to see your fit','We’ll check interests, eligibility, skills, location and deadline separately.',`<a class="btn sm primary" href="#/profile">Build profile</a>`) : `
@@ -1003,6 +1007,7 @@ function viewDetail(id){
         </div>
         <div class="prov" style="margin-top:8px">Rule-based check · not a prediction of acceptance</div>`}
       </div>
+      ${hasProfile()?'<div class="card" id="aiFit"></div>':''}
       <div class="card">
         <div class="eyebrow" style="margin-bottom:8px">Recommended next step</div>
         <p class="small" style="margin-bottom:14px">${esc(nextAction)}</p>
@@ -1014,6 +1019,7 @@ function viewDetail(id){
       </div>
     </div>
   </div>`;
+  drawAIFit(o);
 }
 
 /* =========================================================
@@ -1064,19 +1070,102 @@ function templateFree(kind, o, p = S.profile){
   return '';
 }
 
-/* Optional Gemini — key stays in this browser, user must opt in. */
-async function geminiDraft(prompt){
-  const key = S.settings.geminiKey; if (!key) throw new Error('No API key');
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(S.settings.model||'gemini-2.5-flash')}:generateContent`;
-  const res = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json','x-goog-api-key':key}, body: JSON.stringify({ contents:[{role:'user',parts:[{text:prompt}]}], generationConfig:{ temperature:0.5, responseMimeType:'application/json' } }) });
-  if (!res.ok) throw new Error(`Gemini error ${res.status}`);
-  const j = await res.json();
-  const txt = j?.candidates?.[0]?.content?.parts?.map(p=>p.text).join('') || '';
-  return JSON.parse(txt.replace(/^```json|```$/g,'').trim());
+/* =========================================================
+   AI CLIENT — talks to our server; the Gemini key never reaches the browser.
+   ========================================================= */
+const API_BASE = (document.querySelector('meta[name="oppapp-api"]')?.content || '').trim().replace(/\/$/, '');
+const AI = { ready:false, checked:false, model:null };
+async function aiHealth(){
+  try { const r = await fetch(API_BASE + '/api/health', {cache:'no-store'}); const j = r.ok ? await r.json() : null; AI.ready = !!j?.gemini; AI.model = j?.model || null; }
+  catch { AI.ready = false; }
+  AI.checked = true;
 }
-const GROUNDING = `Rules: Use ONLY facts in STUDENT_PROFILE. Never invent courses, papers read, grades, awards, skills, experiences or recipients. If the student lacks something, do not claim it. Do not flatter generically. Keep it concise, warm and professional. Do not include placeholder brackets.`;
-function profileForAI(p = S.profile){ const {name,eduLevel,school,gradYear,interests,skills,availability,projects,experiences,email} = p; return {name,email,eduLevel,school,gradYear,interests,skills,availability,projects:projects.map(({name,role,desc,skills})=>({name,role,desc,skills})),experiences:experiences.map(({type,title,org,when,desc})=>({type,title,org,when,desc}))}; }
-function oppForAI(o){ const {title,org,category,description,required,preferred,eduLevels,labFocus,contact} = o; return {title,org:org.replace(/ \(demo\)$/,''),category,description,required,preferred,eligibleLevels:eduLevels,focus:labFocus,recipientRole:contact?.role}; }
+async function api(path, body){
+  const ctrl = new AbortController(), t = setTimeout(() => ctrl.abort(), 45000);
+  try {
+    const r = await fetch(API_BASE + '/api/' + path, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body), signal:ctrl.signal });
+    let j = null; try { j = await r.json(); } catch {}
+    if (!r.ok) throw new Error(j?.error?.message || `The AI server returned ${r.status}.`);
+    return j;
+  } catch (e) { if (e.name === 'AbortError') throw new Error('The AI request timed out. Try again.'); if (e instanceof TypeError) throw new Error('Couldn’t reach the AI server.'); throw e; }
+  finally { clearTimeout(t); }
+}
+// Only what the AI needs. Phone numbers and LinkedIn are never sent.
+function aiProfile(p = S.profile){
+  const { name, email, school, eduLevel, gradYear, location, availability, interests, skills, categories, projects, experiences, links } = p;
+  return { name, email, school, eduLevel, gradYear, location, availability, interests, skills, categories,
+    projects: projects.map(({name, role, desc, skills}) => ({name, role, desc, skills})),
+    experiences: experiences.map(({type, title, org, when, desc}) => ({type, title, org, when, desc})),
+    links: { github: links?.github && links.github !== 'https://github.com/' ? links.github : '', portfolio: links?.portfolio || '' } };
+}
+function hashStr(str){ let h = 5381; for (let i = 0; i < str.length; i++) h = ((h << 5) + h + str.charCodeAt(i)) | 0; return (h >>> 0).toString(36); }
+const profileHash = () => hashStr(JSON.stringify(aiProfile()));
+const aiBadge = () => `<span class="badge b-sky">${ic('sparkle','sm')}Gemini</span>`;
+function aiOffline(what){ return `<div class="small muted row" style="gap:8px">${ic('info','sm')}<span>${what} needs the AI server, which isn’t connected on this copy of the site. Everything else works.</span></div>`; }
+
+/* Flags = statements in an AI draft that the server couldn't trace to your profile. */
+const flagStillPresent = (f, text) => { const t = lc(text); const needle = lc(f.text).slice(0, 40).trim(); return f.type === 'claim' && !t.includes(needle) ? !f.loose : t.includes(needle); };
+function liveFlags(item, text){
+  if (!item?.flags) return [];
+  return item.flags.filter(f => !f.ok && (f.type === 'claim' ? true : flagStillPresent(f, text)));
+}
+function flagsHTML(item, text, key){
+  const fl = liveFlags(item, text), miss = item?.missingInfo || [];
+  if (!fl.length && !miss.length) return item?.engine === 'gemini' ? `<div class="cl ok small" style="margin-top:10px">${ic('checkCircle','sm')}<span>No unsupported claims found. Still read it before sending.</span></div>` : '';
+  return `<div class="flags" style="margin-top:12px">
+    ${fl.length ? `<div class="banner red small" style="display:block"><div class="row" style="gap:8px;margin-bottom:8px">${ic('alert','sm')}<b>Check ${fl.length} statement${fl.length>1?'s':''} — not found in your profile</b></div>
+      ${fl.map(f => { const i = item.flags.indexOf(f); return `<div class="row between" style="gap:10px;padding:6px 0;border-top:1px solid rgba(255,107,94,.2);flex-wrap:nowrap"><div style="min-width:0"><div>“${esc(f.text)}”</div><div class="tiny muted">${esc(f.reason)} Edit it out, or add it to your profile if it’s true.</div></div><button class="btn sm" data-flagok="${key}:${i}" title="Keep it — I confirm this is true">It’s true</button></div>`; }).join('')}</div>` : ''}
+    ${miss.length ? `<div class="banner amber small" style="display:block;margin-top:8px"><div class="row" style="gap:8px;margin-bottom:6px">${ic('help','sm')}<b>Gemini left these out — add them to your profile if they apply</b></div><ul style="margin:0;padding-left:18px">${miss.map(m => `<li>${esc(m)}</li>`).join('')}</ul></div>` : ''}
+  </div>`;
+}
+function wireFlagButtons(root, resolve, redraw){
+  $$('[data-flagok]', root).forEach(b => b.onclick = () => { const [key, i] = b.dataset.flagok.split(':'); const item = resolve(key); if (item?.flags?.[+i]) { item.flags[+i].ok = true; save(); redraw(); toast('Marked as accurate'); } });
+}
+
+/* ---------- AI fit explanation (detail page) ---------- */
+const REQ_STATUS = { confirmed:['Confirmed','b-lime','checkCircle'], possible:['Possible','b-sky','help'], unknown:['Unknown','b-amber','help'], gap:['Gap','b-red','xCircle'] };
+function drawAIFit(o){
+  const el = $('#aiFit'); if (!el) return;
+  if (!hasProfile()) { el.remove(); return; }
+  const cached = S.aiMatch[o.id];
+  const fresh = cached && cached.hash === profileHash();
+  const head = `<div class="card-head"><h3>${ic('sparkle','sm')}Gemini fit explanation</h3>${fresh?`<button class="btn sm ghost" id="aiFitGo">${ic('refresh','sm')}Refresh</button>`:''}</div>`;
+  if (!AI.ready && !cached) { el.innerHTML = head + aiOffline('The Gemini explanation'); return; }
+  if (!cached || !fresh) {
+    el.innerHTML = head + `<p class="small muted" style="margin-bottom:12px">${cached?'Your profile changed since the last explanation. ':''}Gemini reads the full listing and your approved profile, then explains what fits, what’s possible and what’s unknown. Every point it cites is checked against your profile.</p>
+      <button class="btn primary" id="aiFitGo" style="width:100%" ${AI.ready?'':'disabled'}>${ic('sparkle','sm')}Explain my fit with Gemini</button>`;
+  } else {
+    const r = cached.result;
+    el.innerHTML = head + `
+      <p class="small" style="margin-bottom:10px">${esc(r.summary)}</p>
+      ${r.relevance.length ? `<div class="eyebrow" style="margin:6px 0">Why it may fit</div>${r.relevance.map(x => `<div class="cl ok small" style="margin-bottom:6px">${ic('checkCircle','sm')}<span>${esc(x.point)}<span class="tiny faint" style="display:block">From your profile: “${esc(x.profileEvidence)}”</span></span></div>`).join('')}` : ''}
+      ${r.requirements.length ? `<div class="eyebrow" style="margin:12px 0 6px">Requirements</div>${r.requirements.map(x => { const st = REQ_STATUS[x.status]; return `<div class="list-item" style="align-items:flex-start"><span class="badge ${st[1]}" style="margin-top:2px">${st[0]}</span><div class="grow"><div class="t" style="white-space:normal">${esc(x.requirement)}</div><div class="s">${esc(x.note)}</div></div></div>`; }).join('')}` : ''}
+      ${r.nextSteps.length ? `<div class="eyebrow" style="margin:12px 0 6px">Next steps</div><ol class="small" style="margin:0;padding-left:18px">${r.nextSteps.map(n => `<li style="margin-bottom:4px">${esc(n)}</li>`).join('')}</ol>` : ''}
+      <div class="prov" style="margin-top:12px">Gemini · checked against your profile${r.downgraded?` · ${r.downgraded} unsupported point${r.downgraded>1?'s':''} removed or marked unknown`:''} · not a prediction of acceptance</div>`;
+  }
+  const go = $('#aiFitGo');
+  if (go) go.onclick = async () => {
+    if (!AI.ready) return toast('The AI server isn’t connected', 'alert');
+    el.innerHTML = head.replace(/<button[\s\S]*<\/button>/, '') + `<div class="row muted small" style="gap:10px;padding:8px 0"><span class="spin"></span>Gemini is comparing this listing with your profile…</div>`;
+    try {
+      const result = await api('match', { profile: aiProfile(), opportunity: o });
+      S.aiMatch[o.id] = { hash: profileHash(), result, at: Date.now() }; save(); log(`Gemini explained fit for ${o.title}`);
+    } catch (e) { toast(e.message, 'alert'); }
+    drawAIFit(o);
+  };
+}
+
+/* ---------- template fallbacks for extra materials ---------- */
+function templateDoc(kind, o){
+  if (kind === 'statement_of_interest') return templateFree('motivation', o);
+  const pr = bestProject(o), sk = relevantSkills(o), p = S.profile;
+  const parts = [];
+  if (pr) parts.push(`${pr.name.replace(/\s*\(.*\)$/,'')}${pr.role?` (${pr.role})`:''}: ${pr.desc}`);
+  if (sk.length) parts.push(`Relevant skills: ${listify(sk)}.`);
+  p.experiences.slice(0,2).forEach(x => parts.push(`${x.title}${x.org?`, ${x.org}`:''}${x.when?` (${x.when})`:''}${x.desc?`: ${x.desc}`:''}`));
+  return parts.join('\n\n');
+}
+const DOC_TYPES = { statement_of_interest:'Statement of interest', experience_summary:'Relevant experience summary' };
 
 /* =========================================================
    VIEW: APPLICATION WORKSPACE
@@ -1089,10 +1178,11 @@ function viewApply(id){
   if (a.status==='Saved' || a.status==='Researching') { a.status = 'In progress'; a.updatedAt = Date.now(); log(`Started preparing ${o.title}`); }
   save();
   const m = match(o);
-  const tabs = o.method==='email' ? ['email'] : o.method==='form' ? ['form','email'] : ['form','email'];
+  const tabs = o.method==='email' ? ['email','docs'] : o.method==='form' ? ['form','email','docs'] : ['form','email','docs'];
   if (!WS.tab || !tabs.includes(WS.tab) || WS.id!==id) WS = { tab:tabs[0], id };
   if (!a.email) a.email = templateEmail(o);
   if (!a.form) a.form = buildForm(o);
+  if (!a.docs) a.docs = {};
   save();
 
   $('#app').innerHTML = `
@@ -1104,7 +1194,7 @@ function viewApply(id){
   ${o.method==='external'?`<div class="banner" style="margin-bottom:16px">${ic('info')}<div>This program applies on its <a href="${esc(o.appUrl)}" target="_blank" rel="noopener">official site</a>. Use this workspace to prepare answers from your profile, then paste them in. OPPAPP never fills or submits external sites for you.</div></div>`:''}
   <div class="split">
     <div class="stack">
-      <div class="tabs" role="tablist">${tabs.map(t=>`<button role="tab" data-tab="${t}" class="${WS.tab===t?'on':''}">${t==='email'?ic('mail','sm')+(o.method==='email'?'Outreach email':'Email (optional)'):ic('form','sm')+(o.method==='form'?'Application form':'Prepared answers')}</button>`).join('')}</div>
+      <div class="tabs" role="tablist">${tabs.map(t=>`<button role="tab" data-tab="${t}" class="${WS.tab===t?'on':''}">${t==='email'?ic('mail','sm')+(o.method==='email'?'Outreach email':'Email (optional)'):t==='docs'?ic('file','sm')+'Materials':ic('form','sm')+(o.method==='form'?'Application form':'Prepared answers')}</button>`).join('')}</div>
       <div id="wsBody"></div>
     </div>
     <div class="stack" style="position:sticky;top:82px">
@@ -1150,35 +1240,66 @@ function drawWS(o){
     const e = a.email;
     $('#wsBody').innerHTML = `
     <div class="card">
-      <div class="card-head"><h3>${ic('mail','sm')}Personalized email</h3><span class="badge ${e.engine==='gemini'?'b-sky':''}">${e.engine==='gemini'?ic('sparkle','sm')+'Drafted with Gemini':'Template draft · from your profile'}</span></div>
+      <div class="card-head"><h3>${ic('mail','sm')}Personalized email</h3><span class="badge ${e.engine==='gemini'?'b-sky':''}">${e.engine==='gemini'?ic('sparkle','sm')+'Drafted with Gemini · review':'Template draft · from your profile'}</span></div>
       <div class="field"><label class="f" for="eTo">To</label><input class="input" id="eTo" placeholder="${o.contact?.role?`${esc(o.contact.role)}’s email — find it on the official page`:'Recipient email'}" value="${esc(e.to)}">
         <div class="tiny ${e.to?'hide':''}" id="toHint" style="color:var(--amber);margin-top:5px">OPPAPP never guesses email addresses. Add the real address from the organization’s page.</div></div>
       <div class="field"><div class="row between"><label class="f" for="eSub">Subject</label><button class="btn sm ghost" data-copy="sub">${ic('copy','sm')}Copy</button></div><input class="input" id="eSub" value="${esc(e.subject)}"></div>
-      <div class="field"><div class="row between"><label class="f" for="eBody">Body</label><button class="btn sm ghost" data-copy="body">${ic('copy','sm')}Copy</button></div><textarea class="input" id="eBody" rows="16">${esc(e.body)}</textarea></div>
+      <div class="field"><div class="row between"><label class="f" for="eBody">Body</label><button class="btn sm ghost" data-copy="body">${ic('copy','sm')}Copy</button></div><textarea class="input" id="eBody" rows="16">${esc(e.body)}</textarea><div id="eFlags">${flagsHTML(e, e.body, 'email')}</div></div>
       <div class="row">
-        <button class="btn" id="regen">${ic('refresh','sm')}Regenerate</button>
-        ${S.settings.geminiKey?`<button class="btn" id="aiGen">${ic('sparkle','sm')}Draft with Gemini</button>`:`<button class="btn ghost" id="aiSetup">${ic('key','sm')}Enable Gemini (optional)</button>`}
+        <button class="btn" id="aiGen" ${AI.ready?'':'disabled title="The AI server isn’t connected"'}>${ic('sparkle','sm')}${e.engine==='gemini'?'Redraft with Gemini':'Draft with Gemini'}</button>
+        ${o.category==='Research'?`<select class="input" id="aiKind" style="width:auto;height:40px" aria-label="Email type"><option value="research_inquiry">Research inquiry</option><option value="outreach_email">General outreach</option></select>`:''}
+        <button class="btn ghost" id="regen">${ic('refresh','sm')}Use template</button>
         <span style="flex:1"></span>
         <button class="btn" id="saveDraft">${ic('check','sm')}Save draft</button>
         <a class="btn primary" id="mailto" href="#">${ic('send','sm')}Open in my email app</a>
       </div>
       <p class="tiny faint" style="margin-top:10px">“Open in my email app” creates a draft in your own mail client — you review and press send. OPPAPP does not send anything.</p>
     </div>`;
-    const sync = () => { a.email.to=$('#eTo').value.trim(); $('#toHint').classList.toggle('hide', !!a.email.to); a.email.subject=$('#eSub').value; a.email.body=$('#eBody').value; a.updatedAt=Date.now(); save(); drawReady(o); };
+    const sync = () => { a.email.to=$('#eTo').value.trim(); $('#toHint').classList.toggle('hide', !!a.email.to); a.email.subject=$('#eSub').value; a.email.body=$('#eBody').value; a.updatedAt=Date.now(); save(); $('#eFlags').innerHTML = flagsHTML(a.email, a.email.body, 'email'); wireFlags(); drawReady(o); };
+    const wireFlags = () => wireFlagButtons($('#wsBody'), () => a.email, () => { $('#eFlags').innerHTML = flagsHTML(a.email, a.email.body, 'email'); wireFlags(); drawReady(o); });
+    wireFlags();
     ['#eTo','#eSub','#eBody'].forEach(s => $(s).addEventListener('input', sync));
     $$('[data-copy]').forEach(b => b.onclick = () => copyText(b.dataset.copy==='sub'?$('#eSub').value:$('#eBody').value, b.dataset.copy==='sub'?'Subject':'Email body'));
     $('#regen').onclick = () => { a.email = { ...templateEmail(o), to:a.email.to }; save(); drawWS(o); drawReady(o); toast('Draft regenerated from your profile','refresh'); };
     $('#saveDraft').onclick = () => { sync(); log(`Saved email draft for ${o.title}`); toast('Draft saved to application'); };
     $('#mailto').onclick = ev => { ev.preventDefault(); sync(); if (!a.email.to){ toast('Add a recipient email first','alert'); $('#eTo').focus(); return; } location.href = `mailto:${encodeURIComponent(a.email.to)}?subject=${encodeURIComponent(a.email.subject)}&body=${encodeURIComponent(a.email.body)}`; log(`Opened email draft for ${o.title} in mail app`); };
-    if ($('#aiSetup')) $('#aiSetup').onclick = openSettings;
-    if ($('#aiGen')) $('#aiGen').onclick = async ev => {
-      const b = ev.currentTarget; b.disabled = true; b.innerHTML = '<span class="spin"></span>Drafting…';
+    $('#aiGen').onclick = async ev => {
+      if (!AI.ready) return toast('The AI server isn’t connected', 'alert');
+      const b = ev.currentTarget; b.disabled = true; b.innerHTML = '<span class="spin"></span>Gemini is drafting…';
       try {
-        const r = await geminiDraft(`Write an outreach/application email from a student.\n${GROUNDING}\nIf eligibility is not stated in OPPORTUNITY, politely ask about it. Mention that a résumé is attached. Return JSON {"subject": string, "body": string}.\nSTUDENT_PROFILE: ${JSON.stringify(profileForAI())}\nOPPORTUNITY: ${JSON.stringify(oppForAI(o))}`);
-        if (typeof r.subject!=='string' || typeof r.body!=='string') throw new Error('Unexpected response shape');
-        a.email = { to:a.email.to, subject:r.subject, body:r.body, engine:'gemini' }; save(); drawWS(o); drawReady(o); toast('Gemini draft ready — review it carefully','sparkle'); log(`Drafted email with Gemini for ${o.title}`);
-      } catch(err){ toast('Gemini unavailable — kept your template draft','alert'); b.disabled=false; b.innerHTML = ic('sparkle','sm')+'Draft with Gemini'; }
+        const kind = $('#aiKind')?.value || (o.category==='Research' ? 'research_inquiry' : 'outreach_email');
+        const r = await api('draft', { docType: kind, profile: aiProfile(), opportunity: o });
+        a.email = { to:a.email.to, subject:r.subject || a.email.subject, body:r.body, engine:'gemini', flags:r.flags, missingInfo:r.missingInfo };
+        a.reviewed = false; save(); drawWS(o);
+        toast(r.flags.length ? `Draft ready — ${r.flags.length} statement${r.flags.length>1?'s':''} to check` : 'Gemini draft ready — read it before sending', r.flags.length ? 'alert' : 'sparkle');
+        log(`Drafted ${kind.replace('_',' ')} with Gemini for ${o.title}`);
+      } catch(err){ toast(err.message + ' Your current draft was kept.', 'alert'); b.disabled = false; b.innerHTML = ic('sparkle','sm') + 'Draft with Gemini'; }
     };
+  } else if (WS.tab === 'docs') {
+    $('#wsBody').innerHTML = Object.entries(DOC_TYPES).map(([k, label]) => { const d = a.docs[k]; return `
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-head"><h3>${ic('file','sm')}${label}</h3>${d?`<span class="badge ${d.engine==='gemini'?'b-sky':''}">${d.engine==='gemini'?ic('sparkle','sm')+'Gemini · review':'Template · from your profile'}</span>`:''}</div>
+      ${d ? `<textarea class="input" data-doc="${k}" rows="8">${esc(d.body)}</textarea><div data-docflags="${k}">${flagsHTML(d, d.body, k)}</div>` : `<p class="small muted" style="margin-bottom:12px">${k==='statement_of_interest'?'Why you want this opportunity, written from your interests and projects.':'Your most relevant projects and experience for this listing, ready to paste into a form.'}</p>`}
+      <div class="row" style="margin-top:12px">
+        <button class="btn ${d?'':'primary'}" data-docai="${k}" ${AI.ready?'':'disabled title="The AI server isn’t connected"'}>${ic('sparkle','sm')}${d?.engine==='gemini'?'Redraft':'Draft'} with Gemini</button>
+        <button class="btn ghost" data-doctpl="${k}">${ic('refresh','sm')}Use template</button>
+        <span style="flex:1"></span>
+        ${d?`<button class="btn sm ghost" data-doccopy="${k}">${ic('copy','sm')}Copy</button>`:''}
+      </div>
+    </div>`; }).join('') + (!AI.ready ? aiOffline('Gemini drafting') : '');
+    const redrawFlags = k => { const el = $(`[data-docflags="${k}"]`); if (el) { el.innerHTML = flagsHTML(a.docs[k], a.docs[k].body, k); wire(); } drawReady(o); };
+    const wire = () => wireFlagButtons($('#wsBody'), k => a.docs[k], () => drawWS(o));
+    wire();
+    $$('[data-doc]').forEach(t => t.addEventListener('input', () => { const k = t.dataset.doc; a.docs[k].body = t.value; a.updatedAt = Date.now(); save(); redrawFlags(k); }));
+    $$('[data-doccopy]').forEach(b => b.onclick = () => copyText(a.docs[b.dataset.doccopy].body, DOC_TYPES[b.dataset.doccopy]));
+    $$('[data-doctpl]').forEach(b => b.onclick = () => { const k = b.dataset.doctpl; const body = templateDoc(k, o); if (!body) return toast('Add a project or interests to your profile first', 'alert'); a.docs[k] = { body, engine:'template' }; save(); drawWS(o); });
+    $$('[data-docai]').forEach(b => b.onclick = async () => {
+      if (!AI.ready) return toast('The AI server isn’t connected', 'alert');
+      const k = b.dataset.docai; b.disabled = true; b.innerHTML = '<span class="spin"></span>Drafting…';
+      try { const r = await api('draft', { docType:k, profile:aiProfile(), opportunity:o }); a.docs[k] = { body:r.body, engine:'gemini', flags:r.flags, missingInfo:r.missingInfo }; a.reviewed = false; save(); log(`Drafted ${DOC_TYPES[k].toLowerCase()} with Gemini for ${o.title}`); }
+      catch (e) { toast(e.message, 'alert'); }
+      drawWS(o);
+    });
   } else {
     $('#wsBody').innerHTML = `
     <div class="card">
@@ -1189,6 +1310,7 @@ function drawWS(o){
          : f.type==='choice'?`<select class="input" id="ff${i}" data-i="${i}"><option value="">Choose…</option>${f.options.map(op=>`<option ${f.value===op?'selected':''}>${esc(op)}</option>`).join('')}</select><div class="tiny faint" style="margin-top:5px">OPPAPP will not answer this for you.</div>`
          : f.type==='file'?`<div class="row"><span class="chip">${ic('file','sm')}${f.value?esc(f.value):'No résumé on file'}</span>${!f.value?'<a class="small" href="#/profile">Add résumé</a>':''}</div>`
          : `<input class="input" id="ff${i}" data-i="${i}" value="${esc(f.value)}">`}
+        ${f.type==='long'?`<div data-ffflags="${i}">${flagsHTML(f, f.value, 'f'+i)}</div><div class="row" style="margin-top:8px"><button class="btn sm" data-ffai="${i}" ${AI.ready?'':'disabled title="The AI server isn’t connected"'}>${ic('sparkle','sm')}${f.src==='ai'?'Redraft':'Draft'} with Gemini</button></div>`:''}
         ${['drafted','ai'].includes(f.src)?`<label class="check tiny" style="margin-top:8px"><input type="checkbox" data-rev="${i}" ${f.reviewed?'checked':''}>I reviewed this and it’s accurate</label>`:''}
       </div>`).join('')}
       <div class="row">
@@ -1198,7 +1320,16 @@ function drawWS(o){
         <button class="btn primary" id="saveForm">${ic('check','sm')}Save answers</button>
       </div>
     </div>`;
-    $$('#wsBody [data-i]').forEach(el => el.addEventListener('input', () => { const f = a.form[+el.dataset.i]; f.value = el.value; if (f.src!=='judgment') f.src = f.value ? (f.src==='empty'?'edited':f.src==='profile'?'profile':'edited') : 'empty'; if (f.src==='edited') f.reviewed = true; a.updatedAt=Date.now(); save(); drawReady(o); }));
+    $$('#wsBody [data-i]').forEach(el => el.addEventListener('input', () => { const i = +el.dataset.i, f = a.form[i]; f.value = el.value; if (f.src!=='judgment' && f.src!=='ai') f.src = f.value ? (f.src==='empty'?'edited':f.src==='profile'?'profile':'edited') : 'empty'; if (f.src==='edited') f.reviewed = true; a.updatedAt=Date.now(); save(); const fe = $(`[data-ffflags="${i}"]`); if (fe) { fe.innerHTML = flagsHTML(f, f.value, 'f'+i); wireFF(); } drawReady(o); }));
+    const wireFF = () => wireFlagButtons($('#wsBody'), k => a.form[+k.slice(1)], () => drawWS(o));
+    wireFF();
+    $$('[data-ffai]').forEach(b => b.onclick = async () => {
+      if (!AI.ready) return toast('The AI server isn’t connected', 'alert');
+      const f = a.form[+b.dataset.ffai]; b.disabled = true; b.innerHTML = '<span class="spin"></span>Drafting…';
+      try { const r = await api('draft', { docType:'form_answer', question:f.label, profile:aiProfile(), opportunity:o }); Object.assign(f, { value:r.body, src:'ai', reviewed:false, flags:r.flags, missingInfo:r.missingInfo, engine:'gemini' }); save(); log(`Drafted “${f.label}” with Gemini`); }
+      catch (e) { toast(e.message, 'alert'); }
+      drawWS(o);
+    });
     $$('#wsBody [data-i]').forEach(el => el.addEventListener('change', () => drawWS(o)));
     $$('[data-rev]').forEach(c => c.onchange = () => { a.form[+c.dataset.rev].reviewed = c.checked; save(); drawReady(o); });
     $('#refill').onclick = () => { a.form = buildForm(o); save(); drawWS(o); drawReady(o); toast('Re-filled from your profile','refresh'); };
@@ -1222,6 +1353,10 @@ function readiness(o){
     const unrev = a.form.filter(f=>['drafted','ai'].includes(f.src) && !f.reviewed);
     push(unrev.length?'warn':'ok', unrev.length ? `${unrev.length} drafted answer${unrev.length>1?'s':''} not yet reviewed` : 'Drafted answers reviewed');
   }
+  const openFlags = [ (o.method==='email' || WS.tab==='email') ? liveFlags(a.email, a.email.body).length : 0,
+    ...Object.values(a.docs||{}).map(d => liveFlags(d, d.body).length),
+    ...(o.method!=='email' ? a.form.map(f => liveFlags(f, f.value).length) : []) ].reduce((x,y)=>x+y, 0);
+  push(openFlags ? 'bad' : 'ok', openFlags ? `${openFlags} AI statement${openFlags>1?'s':''} not found in your profile` : 'No unsupported AI statements');
   push(p.resumeName?'ok':'bad', p.resumeName ? 'Résumé on file' : 'No résumé uploaded');
   push(m.elig.status==='meets'?'ok':m.elig.status==='not-met'?'bad':'warn', m.elig.status==='meets'?'Eligibility stated in listing':m.elig.status==='not-met'?'Doesn’t meet stated eligibility':'Eligibility needs confirmation');
   push(m.deadline.status==='passed'?'bad':m.deadline.status==='unknown'?'warn':'ok', m.deadline.status==='passed'?'Deadline passed':m.deadline.status==='unknown'?'Deadline not verified':`Deadline ${m.deadline.status==='soon'?'soon — ':''}${fmtDate(o.deadline)}`);
@@ -1237,7 +1372,7 @@ function readiness(o){
 }
 function drawReady(o){
   const a = S.apps[o.id], r = readiness(o);
-  const terminal = ['Submitted','Follow-up due','Interview','Accepted','Declined','Closed'].includes(a.status);
+  const terminal = [...SUBMITTED,...CLOSED].includes(a.status);
   if (!terminal) {
     const newStatus = r.bad ? 'Needs information' : a.reviewed ? 'Ready for review' : 'In progress';
     if (newStatus !== a.status) { a.status = newStatus; save(); const sb=$('#stBadge'); if (sb){ sb.className = 'badge '+STATUS_CLS[a.status]; sb.innerHTML = '<span class="dot"></span>'+esc(a.status); } }
@@ -1266,30 +1401,41 @@ function drawReady(o){
 /* =========================================================
    VIEW: MY APPLICATIONS (tracker)
    ========================================================= */
+const TF = { q:'', group:'all' };
+const TGROUPS = { all:['All', () => true], active:['Active', a => !CLOSED.includes(a.status) && !SUBMITTED.includes(a.status)], submitted:['Submitted', a => SUBMITTED.includes(a.status)], closed:['Closed out', a => CLOSED.includes(a.status)] };
 function viewApps(){
-  const apps = Object.values(S.apps).sort((a,b)=>b.updatedAt-a.updatedAt);
-  const count = f => apps.filter(f).length;
+  const all = Object.values(S.apps).sort((a,b)=>b.updatedAt-a.updatedAt);
+  const count = f => all.filter(f).length;
+  const q = lc(TF.q).trim();
+  const apps = all.filter(TGROUPS[TF.group][1]).filter(a => { if (!q) return true; const o = OPP(a.id); return lc([o.title, o.org, o.category, a.status, a.notes].join(' ')).includes(q); });
   $('#app').innerHTML = `
   <div class="page-head"><div><div class="eyebrow">Tracker</div><h1>My Applications</h1><p>Everything you’re pursuing. Prepared ≠ submitted — you confirm when something is sent.</p></div><a class="btn primary" href="#/discover">${ic('plus','sm')}Find more</a></div>
   <div class="kpis">
-    <div class="kpi"><b>${count(a=>a.status==='Saved'||a.status==='Researching')}</b><span>Saved / researching</span></div>
+    <div class="kpi"><b>${count(a=>['Interested','Saved','Researching'].includes(a.status))}</b><span>Interested / saved</span></div>
     <div class="kpi"><b>${count(a=>['In progress','Needs information','Ready for review'].includes(a.status))}</b><span>Preparing</span></div>
-    <div class="kpi hl"><b>${count(a=>['Submitted','Follow-up due','Interview'].includes(a.status))}</b><span>Submitted / active</span></div>
-    <div class="kpi"><b>${count(a=>a.followUp && daysUntil(a.followUp)<=0 && !['Accepted','Declined','Closed'].includes(a.status))}</b><span>Follow-ups due</span></div>
+    <div class="kpi hl"><b>${count(a=>SUBMITTED.includes(a.status))}</b><span>Submitted / active</span></div>
+    <div class="kpi"><b>${count(a=>a.followUp && daysUntil(a.followUp)<=0 && !CLOSED.includes(a.status))}</b><span>Follow-ups due</span></div>
   </div>
+  ${all.length ? `<div class="row between" style="margin-bottom:12px;gap:12px">
+    <div class="search" style="flex:1;min-width:220px">${ic('search')}<input class="input" id="tq" placeholder="Search your applications…" value="${esc(TF.q)}" aria-label="Search applications"></div>
+    <div class="chips">${Object.entries(TGROUPS).map(([k,[l,f]])=>`<button class="chip tog ${TF.group===k?'on':''}" data-tg="${k}">${l} <span class="faint">${count(f)}</span></button>`).join('')}</div>
+  </div>` : ''}
   <div class="card" style="padding:0">
+    ${!apps.length && all.length ? emptyState('search','Nothing matches','Try a different search or filter.') : ''}
     ${apps.length ? `<div class="app-row head"><span>Opportunity</span><span>Status</span><span>Deadline</span><span>Follow up</span><span></span></div>` + apps.map(a => {
       const o = OPP(a.id), d = daysUntil(o.deadline), fu = a.followUp ? daysUntil(a.followUp) : null;
       return `<div class="app-row">
         <div class="row" style="flex-wrap:nowrap;min-width:0"><div class="logo" style="width:38px;height:38px">${ic(CAT_ICON[o.category]||'star','sm')}</div><div style="min-width:0"><a href="#/opp/${o.id}" style="color:var(--text);font-weight:600;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(o.title)}</a><div class="tiny muted">${esc(o.org)} · ${o.method==='email'?'Email':o.method==='form'?'Form':'Official site'}${a.submittedAt?` · sent ${fmtDate(a.submittedAt)}`:` · saved ${fmtDate(a.savedAt)}`}</div></div></div>
         <div><select class="input" data-st="${a.id}" aria-label="Status">${STATUSES.map(s=>`<option ${s===a.status?'selected':''}>${s}</option>`).join('')}</select></div>
         <div class="small">${o.deadline?`${fmtDate(o.deadline)} ${d<0?'<span class="badge b-red">passed</span>':d<=7?`<span class="badge b-amber">${d}d</span>`:''}`:'<span class="faint">Check source</span>'}</div>
-        <div><input type="date" class="input" data-fu="${a.id}" value="${esc(a.followUp)}" aria-label="Follow-up date">${fu!==null&&fu<=0&&!['Accepted','Declined','Closed'].includes(a.status)?'<div class="tiny" style="color:var(--amber);margin-top:3px">Follow-up due</div>':''}</div>
+        <div><input type="date" class="input" data-fu="${a.id}" value="${esc(a.followUp)}" aria-label="Follow-up date">${fu!==null&&fu<=0&&!CLOSED.includes(a.status)?'<div class="tiny" style="color:var(--amber);margin-top:3px">Follow-up due</div>':''}</div>
         <div class="row" style="flex-wrap:nowrap;gap:4px"><a class="btn sm" href="#/apply/${o.id}">${ic('edit','sm')}Open</a><button class="btn sm ghost icon-btn" data-note="${a.id}" title="Notes" aria-label="Notes">${ic('file','sm')}</button><button class="btn sm ghost icon-btn" data-del="${a.id}" title="Remove" aria-label="Remove">${ic('trash','sm')}</button></div>
         ${a.notes?`<div class="notes-row tiny muted">${ic('file','sm')} ${esc(a.notes)}</div>`:''}
       </div>`; }).join('')
-    : emptyState('folder','No applications yet','Save opportunities from Discover or start preparing one — they’ll show up here with deadlines and follow-ups.','<a class="btn primary" href="#/discover">Discover opportunities</a>')}
+    : all.length ? '' : emptyState('folder','No applications yet','Save opportunities from Discover or start preparing one — they’ll show up here with deadlines and follow-ups.','<a class="btn primary" href="#/discover">Discover opportunities</a>')}
   </div>`;
+  if ($('#tq')) { $('#tq').oninput = e => { TF.q = e.target.value; const pos = e.target.selectionStart; viewApps(); const el = $('#tq'); el.focus(); el.setSelectionRange(pos, pos); }; }
+  $$('[data-tg]').forEach(b => b.onclick = () => { TF.group = b.dataset.tg; viewApps(); });
   $$('[data-st]').forEach(s => s.onchange = () => {
     const a = S.apps[s.dataset.st], o = OPP(a.id);
     if (s.value==='Submitted' && !a.submittedAt) { if (!confirm('Mark as submitted? Only do this if you actually sent it.')) { s.value=a.status; return; } a.submittedAt = todayISO(); if (!a.followUp) a.followUp = addDays(10); }
@@ -1311,12 +1457,12 @@ function viewProfile(){
   const p = S.profile, pc = profileCompletion();
   $('#app').innerHTML = `
   <div class="page-head"><div><div class="eyebrow">My profile</div><h1>${p.name?esc(p.name):'Build your profile'}</h1><p>Your single source of truth. Every recommendation and draft uses only what’s here.</p></div>
-    <div class="row"><button class="btn ghost" id="settingsBtn">${ic('settings','sm')}Settings</button>${!p.isDemo?`<button class="btn" id="loadDemo">${ic('user','sm')}Try demo student</button>`:''}<a class="btn primary" href="#/discover">${ic('compass','sm')}See my matches</a></div></div>
+    <div class="row">${!p.isDemo?`<button class="btn" id="loadDemo">${ic('user','sm')}Try demo student</button>`:''}<a class="btn primary" href="#/discover">${ic('compass','sm')}See my matches</a></div></div>
   ${p.isDemo?`<div class="banner" style="margin-bottom:16px">${ic('info')}<div>This is <b>Alex Rivera</b>, a fictional demo student. <button class="btn sm" id="clearDemo" style="margin-left:6px">Start my own profile</button></div></div>`:''}
   <div class="split">
     <div class="stack">
       <div class="card">
-        <div class="card-head"><h3>${ic('upload','sm')}Import from résumé</h3><span class="tiny faint">PDF, DOCX or TXT · read in your browser only</span></div>
+        <div class="card-head"><h3>${ic('upload','sm')}Import from résumé</h3><span class="tiny faint" id="importNote">PDF, DOCX or TXT</span></div>
         <div class="drop" id="drop" tabindex="0" role="button" aria-label="Upload résumé">
           <div style="color:var(--lime);margin-bottom:6px">${ic('upload','lg')}</div>
           <div style="font-weight:600">Drop your résumé here or click to choose</div>
@@ -1373,7 +1519,7 @@ function viewProfile(){
       </div>
       <div class="card">
         <div class="card-head"><h3>${ic('shield','sm')}Privacy</h3></div>
-        <p class="small muted" style="margin-bottom:12px">Your profile is saved only in this browser (localStorage). There is no account or server. Clearing it can’t be undone.</p>
+        <p class="small muted" style="margin-bottom:12px">Your profile is saved only in this browser (localStorage). When you use an AI feature, the relevant profile fields and opportunity are sent through our server to Google Gemini; nothing is stored on the server. Phone numbers are never sent. Clearing your data can’t be undone.</p>
         <button class="btn sm danger" id="wipe">${ic('trash','sm')}Delete all my data</button>
       </div>
     </div>
@@ -1397,7 +1543,7 @@ function viewProfile(){
   $('#wipe').onclick = () => { if (!confirm('Delete your profile, saved opportunities, drafts and activity from this browser?')) return; localStorage.removeItem(KEY); S = defaultState(); toast('All data deleted','trash'); go('#/'); };
   if ($('#loadDemo')) $('#loadDemo').onclick = () => { if (hasProfile() && !confirm('Replace your current profile with the demo student?')) return; loadDemo(); viewProfile(); };
   if ($('#clearDemo')) $('#clearDemo').onclick = () => { S.profile = EMPTY_PROFILE(); save(); log('Started a new profile'); renderChrome(location.hash); viewProfile(); };
-  $('#settingsBtn').onclick = openSettings;
+  $('#importNote').textContent = AI.ready ? 'PDF, DOCX or TXT · read with Gemini' : 'PDF, DOCX or TXT · read in your browser';
   // résumé
   const drop = $('#drop'), file = $('#file');
   drop.onclick = () => file.click();
@@ -1406,7 +1552,7 @@ function viewProfile(){
   drop.ondragleave = () => drop.classList.remove('over');
   drop.ondrop = e => { e.preventDefault(); drop.classList.remove('over'); if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]); };
   file.onchange = () => file.files[0] && handleFile(file.files[0]);
-  $('#parsePaste').onclick = () => { const t = $('#paste').value.trim(); if (t.length<30) return toast('Paste a bit more text','alert'); showExtract(parseResume(t), null); };
+  $('#parsePaste').onclick = () => { const t = $('#paste').value.trim(); if (t.length<30) return toast('Paste a bit more text','alert'); ingestText(t, null); };
 }
 function refreshStrength(){ const pc = profileCompletion(); const b = $('.progress > i'); if (b) b.style.width = pc.pct+'%'; const n = b && b.closest('.card').querySelector('.mono'); if (n) n.textContent = pc.pct+'%'; }
 function fld(key, label, val, type='text', ph=''){ return `<div class="field"><label class="f" for="pf-${key}">${label}</label><input class="input" id="pf-${key}" type="${type}" data-pf="${key}" value="${esc(val)}" placeholder="${esc(ph)}"></div>`; }
@@ -1454,26 +1600,47 @@ function expModal(x){
     if (x) Object.assign(x,obj); else S.profile.experiences.push(obj); log(`${x?'Updated':'Added'} experience: ${t}`); save(); closeModal(); toast('Saved'); viewProfile(); };
 }
 function loadDemo(){ S.profile = DEMO_PROFILE(); log('Loaded the demo student profile'); save(); toast('Demo student loaded','user'); renderChrome(location.hash); }
-function openSettings(){
-  modal(`<h3>${ic('sparkle')} Gemini drafting (optional)</h3>
-    <p class="muted small" style="margin-bottom:14px">OPPAPP works fully without AI using profile-grounded templates. To draft emails with Google Gemini, add your own API key. It’s stored only in this browser and sent only to Google’s API — don’t use this on a shared computer.</p>
-    <div class="field"><label class="f" for="gk">Gemini API key</label><input class="input" id="gk" type="password" value="${esc(S.settings.geminiKey)}" placeholder="AIza…" autocomplete="off"></div>
-    <div class="field"><label class="f" for="gm">Model</label><input class="input" id="gm" value="${esc(S.settings.model)}"></div>
-    <div class="row" style="justify-content:space-between"><button class="btn ghost danger" id="gClear">Remove key</button><div class="row"><button class="btn ghost" id="gC">Cancel</button><button class="btn primary" id="gS">Save</button></div></div>`);
-  $('#gC').onclick = closeModal;
-  $('#gClear').onclick = () => { S.settings.geminiKey=''; save(); closeModal(); toast('Key removed','key'); render(); };
-  $('#gS').onclick = () => { S.settings.geminiKey=$('#gk').value.trim(); S.settings.model=$('#gm').value.trim()||'gemini-2.5-flash'; save(); closeModal(); toast(S.settings.geminiKey?'Gemini enabled':'Saved','key'); render(); };
+/* ---------- résumé ingestion ---------- */
+async function ingestText(text, fname){
+  if (!AI.ready) return showExtract(fromRules(parseResume(text)), fname, 'rules');
+  $('#extract').innerHTML = `<div class="row muted small" style="margin-top:14px;gap:10px"><span class="spin"></span>Gemini is reading your résumé — nothing is saved until you approve it…</div>`;
+  try {
+    const r = await api('parse-resume', { text });
+    showExtract(fromAI(r.profile), fname, 'ai', null, r.unverified);
+  } catch (e) {
+    showExtract(fromRules(parseResume(text)), fname, 'rules', e.message);
+  }
 }
-
-/* ---------- résumé ingestion (client-side, deterministic) ---------- */
+// Normalize both extractors to one shape: {fields:{k:{value,evidence,verified}}, skills:[{value,...}], interests, projects, experiences}
+function fromRules(x){
+  const wrap = v => ({ value:v, evidence:null, verified:true });
+  return { fields:Object.fromEntries(Object.entries(x.fields).map(([k,v]) => [k, wrap(v)])), skills:x.skills.map(wrap), interests:x.interests.map(wrap), projects:x.projects.map(p => ({...p, verified:true})), experiences:[] };
+}
+function fromAI(p){
+  const fields = {};
+  [['name','name'],['email','email'],['school','school'],['eduLevel','eduLevel'],['gradYear','gradYear'],['location','location'],['github','links.github']].forEach(([src, k]) => {
+    const it = p[src]; if (!it?.value) return;
+    let v = it.value; if (k === 'links.github' && !/^https?:/.test(v)) v = 'https://' + v.replace(/^\/+/, '');
+    const cur = k.startsWith('links.') ? S.profile.links[k.slice(6)] : S.profile[k];
+    if (cur && cur === v) return;
+    fields[k] = { value:v, evidence:it.evidence, verified:it.verified };
+  });
+  const have = arr => new Set(arr.map(lc));
+  const hs = have(S.profile.skills), hi = have(S.profile.interests);
+  return { fields,
+    skills: p.skills.filter(s => !hs.has(lc(s.value))),
+    interests: p.interests.filter(s => !hi.has(lc(s.value))),
+    projects: p.projects.map(x => ({ id:uid(), name:x.name, role:x.role||'', desc:x.desc, skills:x.skills||[], evidence:x.evidence, verified:x.verified })),
+    experiences: p.experiences.map(x => ({ id:uid(), type:x.type, title:x.title, org:x.org||'', when:x.when||'', desc:x.desc||'', evidence:x.evidence, verified:x.verified })) };
+}
 function loadScript(src){ return new Promise((res, rej) => { if ($(`script[src="${src}"]`)) return res(); const s=document.createElement('script'); s.src=src; s.onload=res; s.onerror=()=>rej(new Error('load failed')); document.head.appendChild(s); }); }
 async function handleFile(f){
   const ok = /\.(pdf|docx|txt|md)$/i.test(f.name);
   if (!ok) return toast('Use a PDF, DOCX or TXT file','alert');
   if (f.size > 5*1024*1024) return toast('File is over 5 MB','alert');
   $('#extract').innerHTML = `<div class="row muted small" style="margin-top:14px"><span class="spin"></span>Reading ${esc(f.name)}…</div>`;
+  let text = '';
   try {
-    let text = '';
     if (/\.pdf$/i.test(f.name)) {
       await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');
       pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
@@ -1484,10 +1651,11 @@ async function handleFile(f){
       text = (await mammoth.extractRawText({arrayBuffer: await f.arrayBuffer()})).value;
     } else text = await f.text();
     if (text.trim().length < 30) throw new Error('empty');
-    showExtract(parseResume(text), f.name);
   } catch(e) {
     $('#extract').innerHTML = `<div class="banner red" style="margin-top:14px">${ic('alert')}<div>We couldn’t read that file (it may be scanned or image-only). Paste the text instead, or fill in your profile manually below.</div></div>`;
+    return;
   }
+  ingestText(text, f.name);
 }
 function parseResume(t){
   const out = { fields:{}, skills:[], interests:[], projects:[] };
@@ -1521,17 +1689,24 @@ function parseResume(t){
   return out;
 }
 const FIELD_LABELS = {name:'Name',email:'Email',school:'School',eduLevel:'Education level',gradYear:'Graduation year','links.github':'GitHub','links.linkedin':'LinkedIn'};
-function showExtract(x, fname){
-  const fieldRows = Object.entries(x.fields).map(([k,v]) => { const cur = k.startsWith('links.') ? S.profile.links[k.slice(6)] : S.profile[k]; const conflict = cur && cur!=='https://github.com/' && cur!==v;
-    return `<label class="extract-item"><input type="checkbox" data-xf="${k}" ${conflict?'':'checked'}><div><b>${FIELD_LABELS[k]}:</b> ${esc(k==='eduLevel'?labelEdu(v):v)}${conflict?`<div class="tiny" style="color:var(--amber)">Would replace “${esc(cur)}” — unchecked by default</div>`:''}</div></label>`; }).join('');
-  const total = Object.keys(x.fields).length + x.skills.length + x.interests.length + x.projects.length;
+function showExtract(x, fname, engine='rules', err=null, unverified=0){
+  const ev = it => it.evidence ? `<div class="tiny faint">From résumé: “${esc(it.evidence)}”</div>` : '';
+  const warn = it => it.verified === false ? `<div class="tiny" style="color:var(--amber)">Couldn’t find this in your résumé — check it before adding.</div>` : '';
+  const fieldRows = Object.entries(x.fields).map(([k,it]) => { const v = it.value; const cur = k.startsWith('links.') ? S.profile.links[k.slice(6)] : S.profile[k]; const conflict = cur && cur!=='https://github.com/' && cur!==v;
+    return `<label class="extract-item"><input type="checkbox" data-xf="${k}" ${conflict||it.verified===false?'':'checked'}><div><b>${FIELD_LABELS[k]}:</b> ${esc(k==='eduLevel'?labelEdu(v):v)}${conflict?`<div class="tiny" style="color:var(--amber)">Would replace “${esc(cur)}” — unchecked by default</div>`:''}${warn(it)}${ev(it)}</div></label>`; }).join('');
+  const chip = (it, attr) => `<button class="chip tog ${it.verified===false?'':'on'}" ${attr}="${esc(it.value)}" title="${esc(it.evidence ? 'From résumé: ' + it.evidence : '')}">${it.verified===false?ic('alert','sm'):''}${esc(it.value)}</button>`;
+  const total = Object.keys(x.fields).length + x.skills.length + x.interests.length + x.projects.length + x.experiences.length;
+  const isAI = engine === 'ai';
   $('#extract').innerHTML = `<div class="card tight" style="margin-top:14px;background:var(--surface-2)">
-    <div class="card-head"><h3>${ic('sparkle','sm')}Review what we found</h3><span class="tiny faint">Rule-based extraction · nothing saved yet</span></div>
+    <div class="card-head"><h3>${ic('sparkle','sm')}Review what we found</h3><span class="tiny faint">${isAI?'Extracted by Gemini':'Rule-based extraction'} · nothing saved yet</span></div>
+    ${err?`<div class="banner amber small" style="margin-bottom:10px">${ic('alert','sm')}<div>Gemini couldn’t read it (${esc(err)}) — showing the basic extractor’s results instead.</div></div>`:''}
+    ${isAI?`<p class="tiny muted" style="margin-bottom:8px">Your résumé text was sent through our server to Google Gemini for this step and wasn’t stored. Each item shows the line it came from.${unverified?` <span style="color:var(--amber)">${unverified} item${unverified>1?'s':''} couldn’t be matched to your résumé and ${unverified>1?'are':'is'} unchecked.</span>`:''}</p>`:''}
     ${!total ? `<p class="small muted">We couldn’t find new details. Add them manually below.</p>` : `
     ${fieldRows}
-    ${x.skills.length?`<div class="extract-item" style="display:block"><div class="small" style="margin-bottom:6px"><b>Skills</b> <span class="faint">(click to deselect)</span></div><div class="chips">${x.skills.map(s=>`<button class="chip tog on" data-xs="${esc(s)}">${esc(s)}</button>`).join('')}</div></div>`:''}
-    ${x.interests.length?`<div class="extract-item" style="display:block"><div class="small" style="margin-bottom:6px"><b>Interests</b></div><div class="chips">${x.interests.map(s=>`<button class="chip tog on" data-xi="${esc(s)}">${esc(s)}</button>`).join('')}</div></div>`:''}
-    ${x.projects.map((p,i)=>`<label class="extract-item"><input type="checkbox" data-xp="${i}" checked><div><b>Project:</b> ${esc(p.name)}<div class="tiny muted">${esc(p.desc.slice(0,160))}${p.desc.length>160?'…':''}</div></div></label>`).join('')}
+    ${x.skills.length?`<div class="extract-item" style="display:block"><div class="small" style="margin-bottom:6px"><b>Skills</b> <span class="faint">(click to toggle)</span></div><div class="chips">${x.skills.map(s=>chip(s,'data-xs')).join('')}</div></div>`:''}
+    ${x.interests.length?`<div class="extract-item" style="display:block"><div class="small" style="margin-bottom:6px"><b>Interests</b></div><div class="chips">${x.interests.map(s=>chip(s,'data-xi')).join('')}</div></div>`:''}
+    ${x.projects.map((p,i)=>`<label class="extract-item"><input type="checkbox" data-xp="${i}" ${p.verified===false?'':'checked'}><div><b>Project:</b> ${esc(p.name)}<div class="tiny muted">${esc(p.desc.slice(0,180))}${p.desc.length>180?'…':''}</div>${warn(p)}${ev(p)}</div></label>`).join('')}
+    ${x.experiences.map((e,i)=>`<label class="extract-item"><input type="checkbox" data-xe="${i}" ${e.verified===false?'':'checked'}><div><b>${esc(e.type)}:</b> ${esc(e.title)}${e.org?` · ${esc(e.org)}`:''}${e.when?` <span class="faint">(${esc(e.when)})</span>`:''}${e.desc?`<div class="tiny muted">${esc(e.desc.slice(0,180))}</div>`:''}${warn(e)}${ev(e)}</div></label>`).join('')}
     <div class="row" style="margin-top:12px;justify-content:flex-end"><button class="btn sm ghost" id="xCancel">Discard</button><button class="btn sm primary" id="xAdd">${ic('check','sm')}Add selected to profile</button></div>`}
   </div>`;
   if (!total) { if (fname) { S.profile.resumeName = fname; save(); } return; }
@@ -1539,16 +1714,16 @@ function showExtract(x, fname){
   $('#xCancel').onclick = () => $('#extract').innerHTML = '';
   $('#xAdd').onclick = () => {
     const p = S.profile;
-    $$('[data-xf]').forEach(c => { if (!c.checked) return; const k=c.dataset.xf; if (k.startsWith('links.')) p.links[k.slice(6)] = x.fields[k]; else p[k] = x.fields[k]; });
-    $$('[data-xs].on').forEach(b => p.skills.push(b.dataset.xs));
-    $$('[data-xi].on').forEach(b => p.interests.push(b.dataset.xi));
-    $$('[data-xp]').forEach(c => { if (c.checked) p.projects.push(x.projects[+c.dataset.xp]); });
+    $$('[data-xf]').forEach(c => { if (!c.checked) return; const k=c.dataset.xf; if (k.startsWith('links.')) p.links[k.slice(6)] = x.fields[k].value; else p[k] = x.fields[k].value; });
+    $$('[data-xs].on').forEach(b => { if (!p.skills.map(lc).includes(lc(b.dataset.xs))) p.skills.push(b.dataset.xs); });
+    $$('[data-xi].on').forEach(b => { if (!p.interests.map(lc).includes(lc(b.dataset.xi))) p.interests.push(b.dataset.xi); });
+    $$('[data-xp]').forEach(c => { if (c.checked) { const {evidence, verified, ...pr} = x.projects[+c.dataset.xp]; p.projects.push(pr); } });
+    $$('[data-xe]').forEach(c => { if (c.checked) { const {evidence, verified, ...ex} = x.experiences[+c.dataset.xe]; p.experiences.push(ex); } });
     if (fname) p.resumeName = fname;
     p.isDemo = false;
-    log(`Imported details from ${fname||'pasted résumé'}`); save(); toast('Added to your profile'); renderChrome(location.hash); viewProfile();
+    log(`Imported approved details from ${fname||'pasted résumé'}${isAI?' (Gemini)':''}`); save(); toast('Added to your profile'); renderChrome(location.hash); viewProfile();
   };
 }
-
 
 /* ---------- background connection network ---------- */
 (function(){
@@ -1590,6 +1765,7 @@ function showExtract(x, fname){
 
 /* ---------- boot ---------- */
 render();
+aiHealth().then(() => render());
 </script>
 </body>
 </html>
