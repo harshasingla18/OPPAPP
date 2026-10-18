@@ -1065,14 +1065,36 @@ function templateFree(kind, o, p = S.profile){
 }
 
 /* Optional Gemini — key stays in this browser, user must opt in. */
-async function geminiDraft(prompt){
-  const key = S.settings.geminiKey; if (!key) throw new Error('No API key');
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(S.settings.model||'gemini-3.8-flash')}:generateContent`;
-  const res = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json','x-goog-api-key':key}, body: JSON.stringify({ contents:[{role:'user',parts:[{text:prompt}]}], generationConfig:{ temperature:0.5, responseMimeType:'application/json' } }) });
-  if (!res.ok) throw new Error(`Gemini error ${res.status}`);
+const GEMINI_FALLBACKS = ['gemini-3.8-flash','gemini-3.6-flash','gemini-3.5-flash-lite','gemini-3.1-flash-lite'];
+async function geminiCall(model, key, prompt){
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
+  let res;
+  try { res = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json','x-goog-api-key':key}, body: JSON.stringify({ contents:[{role:'user',parts:[{text:prompt}]}], generationConfig:{ temperature:0.5, responseMimeType:'application/json' } }) }); }
+  catch { const e = new Error('Couldn’t reach Google. Check your internet connection.'); e.fatal = true; throw e; }
+  if (!res.ok) {
+    let msg = ''; try { msg = (await res.json())?.error?.message || ''; } catch {}
+    const e = new Error(`Gemini ${res.status}: ${msg || res.statusText || 'request failed'}`);
+    e.status = res.status;
+    // Wrong/unavailable model → try the next one. Bad key or quota → stop.
+    e.fatal = !(res.status === 404 || (res.status === 400 && /model/i.test(msg)) || (res.status === 403 && /model|access/i.test(msg)));
+    if (/api key/i.test(msg)) e.fatal = true;
+    throw e;
+  }
   const j = await res.json();
-  const txt = j?.candidates?.[0]?.content?.parts?.map(p=>p.text).join('') || '';
-  return JSON.parse(txt.replace(/^```json|```$/g,'').trim());
+  const txt = j?.candidates?.[0]?.content?.parts?.filter(p => !p.thought).map(p => p.text || '').join('') || '';
+  if (!txt) { const e = new Error(j?.promptFeedback?.blockReason ? `Gemini declined: ${j.promptFeedback.blockReason}` : 'Gemini returned an empty reply.'); e.fatal = true; throw e; }
+  try { return JSON.parse(txt.replace(/^\s*```(?:json)?\s*|\s*```\s*$/g,'').trim()); }
+  catch { const e = new Error('Gemini’s reply wasn’t valid JSON. Try again.'); e.fatal = true; throw e; }
+}
+async function geminiDraft(prompt){
+  const key = (S.settings.geminiKey || '').trim(); if (!key) throw new Error('No Gemini API key saved. Add it in My Profile → Settings.');
+  const tryOrder = uniq([S.settings.model || GEMINI_FALLBACKS[0], ...GEMINI_FALLBACKS]);
+  let last;
+  for (const model of tryOrder) {
+    try { const out = await geminiCall(model, key, prompt); if (S.settings.model !== model) { S.settings.model = model; save(); } return out; }
+    catch (e) { last = e; if (e.fatal) break; }
+  }
+  throw last;
 }
 const GROUNDING = `Rules: Use ONLY facts in STUDENT_PROFILE. Never invent courses, papers read, grades, awards, skills, experiences or recipients. If the student lacks something, do not claim it. Do not flatter generically. Keep it concise, warm and professional. Do not include placeholder brackets.`;
 function profileForAI(p = S.profile){ const {name,eduLevel,school,gradYear,interests,skills,availability,projects,experiences,email} = p; return {name,email,eduLevel,school,gradYear,interests,skills,availability,projects:projects.map(({name,role,desc,skills})=>({name,role,desc,skills})),experiences:experiences.map(({type,title,org,when,desc})=>({type,title,org,when,desc}))}; }
@@ -1177,7 +1199,7 @@ function drawWS(o){
         const r = await geminiDraft(`Write an outreach/application email from a student.\n${GROUNDING}\nIf eligibility is not stated in OPPORTUNITY, politely ask about it. Mention that a résumé is attached. Return JSON {"subject": string, "body": string}.\nSTUDENT_PROFILE: ${JSON.stringify(profileForAI())}\nOPPORTUNITY: ${JSON.stringify(oppForAI(o))}`);
         if (typeof r.subject!=='string' || typeof r.body!=='string') throw new Error('Unexpected response shape');
         a.email = { to:a.email.to, subject:r.subject, body:r.body, engine:'gemini' }; save(); drawWS(o); drawReady(o); toast('Gemini draft ready — review it carefully','sparkle'); log(`Drafted email with Gemini for ${o.title}`);
-      } catch(err){ toast('Gemini unavailable — kept your template draft','alert'); b.disabled=false; b.innerHTML = ic('sparkle','sm')+'Draft with Gemini'; }
+      } catch(err){ console.warn('Gemini', err); modal(`<h3>Gemini couldn’t draft this</h3><p class="small muted" style="margin-bottom:12px">Your template draft was kept. Here’s what Google said:</p><div class="banner red small" style="word-break:break-word">${esc(err.message)}</div><p class="small muted" style="margin-top:12px">${/api key|API_KEY|401|403/i.test(err.message)?'Your key may be wrong or incomplete. Re-copy it from aistudio.google.com/apikey and paste it again in My Profile → Settings.':/429|quota|rate/i.test(err.message)?'You’ve hit Gemini’s free limit for now. Wait a minute and try again.':'Try again in a moment.'}</p><div class="row" style="justify-content:flex-end;margin-top:14px"><button class="btn primary" onclick="closeModal()">OK</button></div>`); b.disabled=false; b.innerHTML = ic('sparkle','sm')+'Draft with Gemini'; }
     };
   } else {
     $('#wsBody').innerHTML = `
