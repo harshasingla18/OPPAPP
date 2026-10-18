@@ -1076,7 +1076,7 @@ async function geminiCall(model, key, prompt){
     const e = new Error(`Gemini ${res.status}: ${msg || res.statusText || 'request failed'}`);
     e.status = res.status;
     // Wrong/unavailable model → try the next one. Bad key or quota → stop.
-    e.fatal = !(res.status === 404 || (res.status === 400 && /model/i.test(msg)) || (res.status === 403 && /model|access/i.test(msg)));
+    e.fatal = !(res.status === 404 || res.status >= 500 || (res.status === 400 && /model/i.test(msg)) || (res.status === 403 && /model|access/i.test(msg)));
     if (/api key/i.test(msg)) e.fatal = true;
     throw e;
   }
@@ -1091,8 +1091,14 @@ async function geminiDraft(prompt){
   const tryOrder = uniq([S.settings.model || GEMINI_FALLBACKS[0], ...GEMINI_FALLBACKS]);
   let last;
   for (const model of tryOrder) {
-    try { const out = await geminiCall(model, key, prompt); if (S.settings.model !== model) { S.settings.model = model; save(); } return out; }
-    catch (e) { last = e; if (e.fatal) break; }
+    try { return await geminiCall(model, key, prompt); }
+    catch (e) {
+      last = e; if (e.fatal) break;
+      if (e.status >= 500) { // busy: one quick retry on the same model, then move on
+        await new Promise(r => setTimeout(r, 1200));
+        try { return await geminiCall(model, key, prompt); } catch (e2) { last = e2; if (e2.fatal) break; }
+      }
+    }
   }
   throw last;
 }
