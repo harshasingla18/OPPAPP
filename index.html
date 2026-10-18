@@ -702,8 +702,7 @@ function viewLanding(){
     <h1>It’s out there. <em>Find it here.</em></h1>
     <p class="lead">Internships, research, volunteering and more, matched to you. We write the emails and fill out the applications. You just hit send.</p>
     <div class="row">
-      <a class="btn primary lg" href="${hasProfile()?'#/dashboard':'#/profile'}">Find My Opportunities ${ic('arrowR')}</a>
-      <a class="btn lg" href="#/discover">Explore Opportunities</a>
+      <a class="btn primary lg" href="${hasProfile()?'#/dashboard':'#/profile'}" style="padding:0 34px">${hasProfile()?'Continue':'Get started'} ${ic('arrowR')}</a>
     </div>
   </section>
 
