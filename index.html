@@ -1827,6 +1827,73 @@ function drawReady(o){
    VIEW: MY APPLICATIONS (tracker)
    ========================================================= */
 const TF = { q:'', group:'all' };
+const SEL = new Set();
+const OPEN = a => ![...SUBMITTED, ...CLOSED].includes(a.status);
+
+/* ---------- prepare several at once ---------- */
+async function batchPrepare(ids){
+  const list = ids.map(id => S.apps[id]).filter(a => a && OPEN(a));
+  if (!list.length) return toast('Pick applications you haven’t submitted yet', 'alert');
+  modal(`<h3>Preparing ${list.length} application${list.length>1?'s':''}</h3>
+    <p class="small muted" id="bpNote">${AI.ready ? 'Gemini is drafting each email from your profile and checking every claim…' : 'Drafting from your profile with templates. Turn on Gemini for AI drafts.'}</p>
+    <div class="progress" style="margin:14px 0"><i id="bpBar" style="width:0%"></i></div>
+    <div id="bpList" class="stack" style="gap:8px"></div>
+    <div class="row" style="justify-content:flex-end;margin-top:16px"><button class="btn primary" id="bpDone" disabled>Working…</button></div>`);
+  for (let i = 0; i < list.length; i++) {
+    const a = list[i], o = OPP(a.id);
+    $('#bpList')?.insertAdjacentHTML('beforeend', `<div class="row small" id="bp${i}" style="flex-wrap:nowrap"><span class="spin"></span><span style="flex:1;min-width:0">${esc(o.title)}</span></div>`);
+    if (!a.email) a.email = templateEmail(o);
+    if (!a.form) a.form = buildForm(o);
+    if (!a.docs) a.docs = {};
+    if (!a.email.to && S.contacts[o.id]?.status === 'found') a.email.to = S.contacts[o.id].email;
+    let flags = 0, err = null;
+    if (AI.ready) {
+      try {
+        const r = await api('draft', { docType: o.category === 'Research' ? 'research_inquiry' : 'outreach_email', profile: aiProfile(), opportunity: o });
+        a.email = { to:a.email.to, subject:r.subject || a.email.subject, body:r.body, engine:'gemini', flags:r.flags, missingInfo:r.missingInfo };
+        flags = r.flags.length;
+      } catch (e) { err = e.message; }
+    }
+    a.reviewed = false;
+    if (['Interested','Saved','Researching'].includes(a.status)) a.status = 'In progress';
+    a.updatedAt = Date.now(); save();
+    const need = [!a.email.to ? 'email address' : null, flags ? `${flags} claim${flags>1?'s':''} to check` : null].filter(Boolean);
+    const bad = err || need.length;
+    const row = $('#bp' + i);
+    if (row) row.innerHTML = `<span style="color:${bad?'var(--red)':'var(--lime)'}">${ic(bad?'alert':'checkCircle','sm')}</span><span style="flex:1;min-width:0">${esc(o.title)}<span class="tiny" style="display:block;color:${bad?'var(--red)':'var(--muted)'}">${err ? 'Gemini failed, so the template draft was kept' : need.length ? 'Needs: ' + need.join(', ') : 'Drafted. Ready for your review'}</span></span><a class="btn sm" href="#/apply/${o.id}" onclick="closeModal()">Review</a>`;
+    const bar = $('#bpBar'); if (bar) bar.style.width = ((i + 1) / list.length * 100) + '%';
+  }
+  log(`Prepared ${list.length} applications at once${AI.ready?' with Gemini':''}`);
+  const note = $('#bpNote'); if (note) note.textContent = 'Done. Review each draft before you send it. Nothing was sent.';
+  const done = $('#bpDone'); if (done) { done.disabled = false; done.textContent = 'Done'; done.onclick = closeModal; }
+  SEL.clear(); if ((location.hash||'').startsWith('#/applications')) viewApps();
+}
+
+/* ---------- calendar export (.ics) ---------- */
+const icsEsc = v => String(v || '').replace(/\\/g, '\\\\').replace(/\r?\n/g, '\\n').replace(/[,;]/g, m => '\\' + m);
+const icsDay = iso => iso.replace(/-/g, '');
+const icsNext = iso => { const d = new Date(iso + 'T12:00:00'); d.setDate(d.getDate() + 1); return d.toISOString().slice(0, 10).replace(/-/g, ''); };
+const icsFold = line => { const out = []; let l = line; while (l.length > 73) { out.push(l.slice(0, 73)); l = ' ' + l.slice(73); } out.push(l); return out.join('\r\n'); };
+function exportCalendar(ids){
+  const stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+/, '');
+  const link = id => (location.origin && location.origin !== 'null' ? location.origin + location.pathname : '') + '#/apply/' + id;
+  const ev = [];
+  ids.forEach(id => {
+    const a = S.apps[id], o = OPP(id); if (!a || CLOSED.includes(a.status)) return;
+    if (o.deadline && daysUntil(o.deadline) >= 0) ev.push({ uid:`deadline-${id}`, date:o.deadline, title:`Deadline: ${o.title}`, desc:`${o.org}. Prepare it in OPPAPP: ${link(id)}`, alarm:'-P2D' });
+    if (a.followUp) ev.push({ uid:`followup-${id}`, date:a.followUp, title:`Follow up: ${o.title}`, desc:`Follow up with ${o.org} about your application.`, alarm:'PT9H' });
+  });
+  if (!ev.length) return toast('No upcoming deadlines or follow-up dates to add yet', 'calendar');
+  const lines = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//OPPAPP//Opportunity App//EN','CALSCALE:GREGORIAN','METHOD:PUBLISH','X-WR-CALNAME:OPPAPP deadlines'];
+  ev.forEach(e => lines.push('BEGIN:VEVENT', `UID:${e.uid}@oppapp`, `DTSTAMP:${stamp}`, `DTSTART;VALUE=DATE:${icsDay(e.date)}`, `DTEND;VALUE=DATE:${icsNext(e.date)}`,
+    icsFold(`SUMMARY:${icsEsc(e.title)}`), icsFold(`DESCRIPTION:${icsEsc(e.desc)}`), 'BEGIN:VALARM', 'ACTION:DISPLAY', `TRIGGER:${e.alarm}`, icsFold(`DESCRIPTION:${icsEsc(e.title)}`), 'END:VALARM', 'END:VEVENT'));
+  lines.push('END:VCALENDAR');
+  const url = URL.createObjectURL(new Blob([lines.join('\r\n') + '\r\n'], { type:'text/calendar;charset=utf-8' }));
+  const dl = document.createElement('a'); dl.href = url; dl.download = 'oppapp-deadlines.ics'; document.body.appendChild(dl); dl.click(); dl.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+  log(`Exported ${ev.length} calendar event${ev.length>1?'s':''}`);
+  toast(`${ev.length} event${ev.length>1?'s':''} downloaded. Open the file to add ${ev.length>1?'them':'it'} to your calendar`, 'calendar');
+}
 const TGROUPS = { all:['All', () => true], active:['Active', a => !CLOSED.includes(a.status) && !SUBMITTED.includes(a.status)], submitted:['Submitted', a => SUBMITTED.includes(a.status)], closed:['Closed out', a => CLOSED.includes(a.status)] };
 function viewApps(){
   const all = Object.values(S.apps).sort((a,b)=>b.updatedAt-a.updatedAt);
@@ -1844,13 +1911,20 @@ function viewApps(){
   ${all.length ? `<div class="row between" style="margin-bottom:12px;gap:12px">
     <div class="search" style="flex:1;min-width:220px">${ic('search')}<input class="input" id="tq" placeholder="Search your applications…" value="${esc(TF.q)}" aria-label="Search applications"></div>
     <div class="chips">${Object.entries(TGROUPS).map(([k,[l,f]])=>`<button class="chip tog ${TF.group===k?'on':''}" data-tg="${k}">${l} <span class="faint">${count(f)}</span></button>`).join('')}</div>
+  </div>
+  <div class="row between" style="margin-bottom:12px;gap:10px">
+    <label class="check small"><input type="checkbox" id="selAll" ${apps.length && apps.every(a=>SEL.has(a.id))?'checked':''}>Select all</label>
+    <div class="row" style="gap:8px">
+      <button class="btn sm" id="calBtn" title="Download deadlines and follow-ups for Google, Apple or Outlook Calendar">${ic('calendar','sm')}Add ${SEL.size?'selected':'all'} to calendar</button>
+      <button class="btn sm ${SEL.size?'primary':''}" id="batchBtn">${ic('sparkle','sm')}${SEL.size?`Prepare ${SEL.size} selected`:'Select to prepare several at once'}</button>
+    </div>
   </div>` : ''}
   <div class="card" style="padding:0">
     ${!apps.length && all.length ? emptyState('search','Nothing matches','Try a different search or filter.') : ''}
     ${apps.length ? `<div class="app-row head"><span>Opportunity</span><span>Status</span><span>Deadline</span><span>Follow up</span><span></span></div>` + apps.map(a => {
       const o = OPP(a.id), d = daysUntil(o.deadline), fu = a.followUp ? daysUntil(a.followUp) : null;
       return `<div class="app-row">
-        <div class="row" style="flex-wrap:nowrap;min-width:0"><div class="logo" style="width:38px;height:38px">${ic(CAT_ICON[o.category]||'star','sm')}</div><div style="min-width:0"><a href="#/opp/${o.id}" style="color:var(--text);font-weight:600;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(o.title)}</a><div class="tiny muted">${esc(o.org)} · ${o.method==='email'?'Email':o.method==='form'?'Form':'Official site'}${a.submittedAt?` · sent ${fmtDate(a.submittedAt)}`:` · saved ${fmtDate(a.savedAt)}`}</div></div></div>
+        <div class="row" style="flex-wrap:nowrap;min-width:0"><input type="checkbox" data-sel="${a.id}" ${SEL.has(a.id)?'checked':''} aria-label="Select ${esc(o.title)}" style="accent-color:var(--fill);width:16px;height:16px;flex:none"><div class="logo" style="width:38px;height:38px">${ic(CAT_ICON[o.category]||'star','sm')}</div><div style="min-width:0"><a href="#/opp/${o.id}" style="color:var(--text);font-weight:600;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(o.title)}</a><div class="tiny muted">${esc(o.org)} · ${o.method==='email'?'Email':o.method==='form'?'Form':'Official site'}${a.submittedAt?` · sent ${fmtDate(a.submittedAt)}`:` · saved ${fmtDate(a.savedAt)}`}</div></div></div>
         <div><select class="input" data-st="${a.id}" aria-label="Status">${STATUSES.map(s=>`<option ${s===a.status?'selected':''}>${s}</option>`).join('')}</select></div>
         <div class="small">${o.deadline?`${fmtDate(o.deadline)} ${d<0?'<span class="badge b-red">passed</span>':d<=7?`<span class="badge b-amber">${d}d</span>`:''}`:'<span class="faint">Check source</span>'}</div>
         <div><input type="date" class="input" data-fu="${a.id}" value="${esc(a.followUp)}" aria-label="Follow-up date">${fu!==null&&fu<=0&&!CLOSED.includes(a.status)?'<div class="tiny" style="color:var(--amber);margin-top:3px">Follow-up due</div>':''}</div>
@@ -1861,6 +1935,11 @@ function viewApps(){
   </div>`;
   if ($('#tq')) { $('#tq').oninput = e => { TF.q = e.target.value; const pos = e.target.selectionStart; viewApps(); const el = $('#tq'); el.focus(); el.setSelectionRange(pos, pos); }; }
   $$('[data-tg]').forEach(b => b.onclick = () => { TF.group = b.dataset.tg; viewApps(); });
+  [...SEL].forEach(id => { if (!S.apps[id]) SEL.delete(id); });
+  $$('[data-sel]').forEach(c => c.onchange = () => { c.checked ? SEL.add(c.dataset.sel) : SEL.delete(c.dataset.sel); viewApps(); });
+  if ($('#selAll')) $('#selAll').onchange = e => { apps.forEach(a => e.target.checked ? SEL.add(a.id) : SEL.delete(a.id)); viewApps(); };
+  if ($('#calBtn')) $('#calBtn').onclick = () => exportCalendar(SEL.size ? [...SEL] : all.map(a => a.id));
+  if ($('#batchBtn')) $('#batchBtn').onclick = () => SEL.size ? batchPrepare([...SEL]) : toast('Tick the boxes next to the applications you want to prepare', 'info');
   $$('[data-st]').forEach(s => s.onchange = () => {
     const a = S.apps[s.dataset.st], o = OPP(a.id);
     if (s.value==='Submitted' && !a.submittedAt) { if (!confirm('Mark as submitted? Only do this if you actually sent it.')) { s.value=a.status; return; } a.submittedAt = todayISO(); if (!a.followUp) a.followUp = addDays(10); }
