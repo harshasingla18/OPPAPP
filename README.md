@@ -22,7 +22,7 @@ Landing a first research spot or internship often depends on who you know. Stude
 6. **Catch made-up claims.** Any statement in a draft that isn't in your profile (an award, a skill, a number) is flagged in red and blocks "I submitted this" until you edit it out or confirm it's true.
 7. **Track everything.** Interested → In progress → Submitted → Interview → Accepted / Rejected / Withdrawn, with search, filters, notes, follow-up dates, and one-click export of deadlines to Google, Apple or Outlook Calendar.
 
-OPPAPP never sends an email or submits an application for you. "Open in my email app" creates a draft you review and send yourself.
+OPPAPP never sends an email or submits an application for you. You copy the draft and send it yourself.
 
 ## Try it
 

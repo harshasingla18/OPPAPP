@@ -299,6 +299,7 @@ footer .in{max-width:1200px;margin:0 auto;padding:22px 20px;display:flex;justify
   .topbar-in{padding:0 16px}
   .nav{display:none}
   .top-right{margin-left:auto}
+  .top-right .b-demo{display:none}
   .mobile-nav{display:flex;position:fixed;bottom:0;left:0;right:0;z-index:45;background:rgba(10,11,10,.95);backdrop-filter:blur(10px);border-top:1px solid var(--border);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
   .mobile-nav a{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;color:var(--muted);padding:6px 0}
   .mobile-nav a.on{color:var(--lime)}
@@ -1131,7 +1132,7 @@ function contactHTML(o){
   if (!c) return S.settings.geminiKey
     ? `<button class="btn sm" data-findemail="${o.id}">${ic('search','sm')}Find email with Gemini</button><div class="small muted" style="margin-top:4px">Searches the web for a published contact address.</div>`
     : `<span class="faint">Not searched yet</span><div class="small muted">Add a Gemini key in <a href="#/profile">My Profile → Settings</a> to search for one.</div>`;
-  if (c.status === 'found') return `<a href="mailto:${esc(c.email)}">${esc(c.email)}</a> <span class="badge b-sky">${ic('search','sm')}Found by Google Search</span>
+  if (c.status === 'found') return `<b>${esc(c.email)}</b> <span class="badge b-sky">${ic('search','sm')}Found by Google Search</span>
     <div class="small muted">Source: ${c.sourceUrl ? `<a href="${esc(c.sourceUrl)}" target="_blank" rel="noopener">${esc(c.sourceTitle)} ${ic('ext','sm')}</a>` : esc(c.sourceTitle)} · double-check before sending</div>
     <button class="btn sm ghost" data-findemail="${o.id}" style="margin-top:4px">${ic('refresh','sm')}Search again</button>`;
   return `<span style="color:var(--red);font-weight:600">No email found</span><div class="small" style="color:var(--red)">${esc(c.note)}</div>
@@ -1676,9 +1677,9 @@ function drawWS(o){
         <button class="btn ghost" id="regen">${ic('refresh','sm')}Use template</button>
         <span style="flex:1"></span>
         <button class="btn" id="saveDraft">${ic('check','sm')}Save draft</button>
-        <a class="btn primary" id="mailto" href="#">${ic('send','sm')}Open in my email app</a>
+        <button class="btn primary" id="copyEmail">${ic('copy','sm')}Copy whole email</button>
       </div>
-      <p class="tiny faint" style="margin-top:10px">“Open in my email app” creates a draft in your own mail client — you review and press send. OPPAPP does not send anything.</p>
+      <p class="tiny faint" style="margin-top:10px">Copy it into your own email and send it yourself. OPPAPP never sends anything.</p>
     </div>`;
     const sync = () => { a.email.to=$('#eTo').value.trim(); $('#toHint').classList.toggle('hide', !!a.email.to); a.email.subject=$('#eSub').value; a.email.body=$('#eBody').value; a.updatedAt=Date.now(); save(); $('#eFlags').innerHTML = flagsHTML(a.email, a.email.body, 'email'); wireFlags(); drawReady(o); };
     const wireFlags = () => wireFlagButtons($('#wsBody'), () => a.email, () => { $('#eFlags').innerHTML = flagsHTML(a.email, a.email.body, 'email'); wireFlags(); drawReady(o); });
@@ -1687,7 +1688,7 @@ function drawWS(o){
     $$('[data-copy]').forEach(b => b.onclick = () => copyText(b.dataset.copy==='sub'?$('#eSub').value:$('#eBody').value, b.dataset.copy==='sub'?'Subject':'Email body'));
     $('#regen').onclick = () => { a.email = { ...templateEmail(o), to:a.email.to }; save(); drawWS(o); drawReady(o); toast('Draft regenerated from your profile','refresh'); };
     $('#saveDraft').onclick = () => { sync(); log(`Saved email draft for ${o.title}`); toast('Draft saved to application'); };
-    $('#mailto').onclick = ev => { ev.preventDefault(); sync(); if (!a.email.to){ toast('Add a recipient email first','alert'); $('#eTo').focus(); return; } location.href = `mailto:${encodeURIComponent(a.email.to)}?subject=${encodeURIComponent(a.email.subject)}&body=${encodeURIComponent(a.email.body)}`; log(`Opened email draft for ${o.title} in mail app`); };
+    $('#copyEmail').onclick = () => { sync(); copyText(`To: ${a.email.to || '(add recipient)'}\nSubject: ${a.email.subject}\n\n${a.email.body}`, 'Email'); log(`Copied email for ${o.title}`); };
     $('#aiGen').onclick = async ev => {
       if (!AI.ready) return toast('Add your Gemini key in My Profile → Settings', 'alert');
       const b = ev.currentTarget; b.disabled = true; b.innerHTML = '<span class="spin"></span>Gemini is drafting…';
