@@ -15,7 +15,7 @@
   --border:#252a22; --border-2:#333a2e;
   --text:#f1f5ec; --muted:#9aa492; --faint:#6b7465;
   --lime:#6ea8ff; --fill:#3b7bff; --fill-2:#5590ff; --lime-ink:#ffffff; --lime-soft:rgba(110,168,255,.12); --lime-line:rgba(110,168,255,.4);
-  --amber:#f6b93b; --amber-soft:rgba(246,185,59,.12);
+  --amber:#ff6b5e; --amber-soft:rgba(255,107,94,.12);
   --red:#ff6b5e; --red-soft:rgba(255,107,94,.12);
   --sky:#b39dff; --sky-soft:rgba(179,157,255,.12);
   --r-sm:8px; --r:12px; --r-lg:18px;
@@ -83,7 +83,7 @@ main{max-width:1200px;margin:0 auto;padding:28px 20px 80px}
 .divider{height:1px;background:var(--border);margin:16px 0}
 .banner{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-radius:var(--r);border:1px solid var(--border);background:var(--surface-2);font-size:14px}
 .banner.lime{border-color:var(--lime-line);background:var(--lime-soft)}
-.banner.amber{border-color:rgba(246,185,59,.35);background:var(--amber-soft)}
+.banner.amber{border-color:rgba(255,107,94,.35);background:var(--amber-soft)}
 .banner.red{border-color:rgba(255,107,94,.35);background:var(--red-soft)}
 .banner .i{margin-top:2px}
 
@@ -573,7 +573,7 @@ function load(){
   try { const s = JSON.parse(localStorage.getItem(KEY)); if(s && s.profile) { if (s.settings && (!s.settings.model || /^gemini-(1|2)\./.test(s.settings.model))) s.settings.model = 'gemini-3.8-flash'; return Object.assign(defaultState(), s); } } catch {}
   return defaultState();
 }
-function defaultState(){ return { profile:EMPTY_PROFILE(), saved:[], apps:{}, activity:[], settings:{geminiKey:'', model:'gemini-3.8-flash'} }; }
+function defaultState(){ return { profile:EMPTY_PROFILE(), saved:[], apps:{}, activity:[], contacts:{}, settings:{geminiKey:'', model:'gemini-3.8-flash'} }; }
 function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {} }
 function log(text){ S.activity.unshift({ts:Date.now(), text}); S.activity = S.activity.slice(0,40); save(); }
 const hasProfile = () => !!(S.profile.name || S.profile.skills.length || S.profile.interests.length);
@@ -984,6 +984,7 @@ function viewDetail(id){
           <dt>Deadline</dt><dd>${o.deadline ? fmtDate(o.deadline) + (o.kind==='demo'?' <span class="faint small">(demo date)</span>':'') : '<span class="badge b-amber">Not verified — check source</span>'}</dd>
           <dt>Start · duration</dt><dd>${esc(o.start)} · ${esc(o.duration)}</dd>
           <dt>How to apply</dt><dd>${o.method==='email'?'Email '+esc(o.contact?.role||'the organization'):o.method==='form'?'Online application form':'On the official website'}</dd>
+          <dt>Contact email</dt><dd>${contactHTML(o)}</dd>
           <dt>Source</dt><dd>${o.sourceUrl?`<a href="${esc(o.sourceUrl)}" target="_blank" rel="noopener">${esc(o.sourceName)} ${ic('ext','sm')}</a><div class="small muted">Not verified by OPPAPP in this build — details summarized, confirm on source.</div>`:`<span class="faint">${esc(o.sourceName)}</span>`}</dd>
         </dl>
       </div>
@@ -1066,10 +1067,10 @@ function templateFree(kind, o, p = S.profile){
 
 /* Optional Gemini — key stays in this browser, user must opt in. */
 const GEMINI_FALLBACKS = ['gemini-3.8-flash','gemini-3.6-flash','gemini-3.5-flash-lite','gemini-3.1-flash-lite'];
-async function geminiCall(model, key, prompt){
+async function geminiCall(model, key, prompt, opts = {}){
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
   let res;
-  try { res = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json','x-goog-api-key':key}, body: JSON.stringify({ contents:[{role:'user',parts:[{text:prompt}]}], generationConfig:{ temperature:0.5, responseMimeType:'application/json' } }) }); }
+  try { res = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json','x-goog-api-key':key}, body: JSON.stringify(opts.search ? { contents:[{role:'user',parts:[{text:prompt}]}], tools:[{google_search:{}}], generationConfig:{ temperature:0 } } : { contents:[{role:'user',parts:[{text:prompt}]}], generationConfig:{ temperature:0.5, responseMimeType:'application/json' } }) }); }
   catch { const e = new Error('Couldn’t reach Google. Check your internet connection.'); e.fatal = true; throw e; }
   if (!res.ok) {
     let msg = ''; try { msg = (await res.json())?.error?.message || ''; } catch {}
@@ -1083,25 +1084,82 @@ async function geminiCall(model, key, prompt){
   const j = await res.json();
   const txt = j?.candidates?.[0]?.content?.parts?.filter(p => !p.thought).map(p => p.text || '').join('') || '';
   if (!txt) { const e = new Error(j?.promptFeedback?.blockReason ? `Gemini declined: ${j.promptFeedback.blockReason}` : 'Gemini returned an empty reply.'); e.fatal = true; throw e; }
+  if (opts.search) return { text: txt, grounding: j?.candidates?.[0]?.groundingMetadata || {} };
   try { return JSON.parse(txt.replace(/^\s*```(?:json)?\s*|\s*```\s*$/g,'').trim()); }
   catch { const e = new Error('Gemini’s reply wasn’t valid JSON. Try again.'); e.fatal = true; throw e; }
 }
-async function geminiDraft(prompt){
+async function geminiDraft(prompt, opts = {}){
   const key = (S.settings.geminiKey || '').trim(); if (!key) throw new Error('No Gemini API key saved. Add it in My Profile → Settings.');
   const tryOrder = uniq([S.settings.model || GEMINI_FALLBACKS[0], ...GEMINI_FALLBACKS]);
   let last;
   for (const model of tryOrder) {
-    try { return await geminiCall(model, key, prompt); }
+    try { return await geminiCall(model, key, prompt, opts); }
     catch (e) {
       last = e; if (e.fatal) break;
       if (e.status >= 500) { // busy: one quick retry on the same model, then move on
         await new Promise(r => setTimeout(r, 1200));
-        try { return await geminiCall(model, key, prompt); } catch (e2) { last = e2; if (e2.fatal) break; }
+        try { return await geminiCall(model, key, prompt, opts); } catch (e2) { last = e2; if (e2.fatal) break; }
       }
     }
   }
   throw last;
 }
+
+/* ---------- contact email finder (Gemini + Google Search grounding) ----------
+   An email is accepted only if it appears in text that Google Search grounding
+   ties to a web source. Otherwise we report "not found" — never a guess. */
+const EMAIL_RE = /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g;
+async function findContactEmail(o){
+  if (o.kind === 'demo') return { status:'none', note:'This is a fictional demo listing, so there’s no real email to find.', at:Date.now() };
+  const prompt = `Use Google Search to find the official, publicly listed contact email address for prospective applicants of this opportunity.
+Opportunity: ${o.title}
+Organization: ${o.org}
+Official page: ${o.sourceUrl || 'unknown'}
+Rules: Only report an email address that is published on an official page of this organization. Never construct or guess an address from a name or domain pattern. Prefer a program/admissions/contact email over a personal one.
+Reply in exactly this format:
+EMAIL: <the email address, or NONE>
+SOURCE: <the URL of the page that lists it, or NONE>
+NOTE: <one short sentence>`;
+  const { text, grounding } = await geminiDraft(prompt, { search:true });
+  const chunks = (grounding.groundingChunks || []).map(c => c.web).filter(Boolean);
+  const supported = (grounding.groundingSupports || []).map(x => ({ t: x.segment?.text || '', idx: x.groundingChunkIndices || [] }));
+  const claimed = (text.match(/EMAIL:\s*([^\s]+)/i) || [])[1] || '';
+  const note = ((text.match(/NOTE:\s*(.+)/i) || [])[1] || '').trim();
+  const srcLine = ((text.match(/SOURCE:\s*(\S+)/i) || [])[1] || '').trim();
+  const candidates = uniq([claimed, ...(text.match(EMAIL_RE) || [])].map(x => x.replace(/[<>.,;)]+$/,'')).filter(x => EMAIL_RE.test(x) && (EMAIL_RE.lastIndex = 0, true)));
+  for (const email of candidates) {
+    const sup = supported.find(x => x.t.toLowerCase().includes(email.toLowerCase()));
+    if (!sup) continue; // not backed by a search result -> don't trust it
+    const web = chunks[sup.idx[0]] || chunks[0] || {};
+    return { status:'found', email, sourceUrl: /^https?:/.test(srcLine) ? srcLine : (web.uri || ''), sourceTitle: web.title || (srcLine && /^https?:/.test(srcLine) ? new URL(srcLine).hostname : 'search result'), note, at:Date.now() };
+  }
+  if (candidates.length) return { status:'none', note:'Gemini suggested an address, but no search result backed it up, so it isn’t shown. Check the official page.', at:Date.now() };
+  return { status:'none', note: note && !/^none$/i.test(note) ? note : 'No public email was found in search results. Use the official page or application form.', at:Date.now() };
+}
+function contactHTML(o){
+  const c = S.contacts[o.id];
+  if (o.kind === 'demo' && !c) return `<span style="color:var(--red);font-weight:600">No email found</span><div class="small muted">This is a fictional demo listing, so there’s no real address. Type one in when you prepare the email.</div>`;
+  if (!c) return S.settings.geminiKey
+    ? `<button class="btn sm" data-findemail="${o.id}">${ic('search','sm')}Find email with Gemini</button><div class="small muted" style="margin-top:4px">Searches the web for a published contact address.</div>`
+    : `<span class="faint">Not searched yet</span><div class="small muted">Add a Gemini key in <a href="#/profile">My Profile → Settings</a> to search for one.</div>`;
+  if (c.status === 'found') return `<a href="mailto:${esc(c.email)}">${esc(c.email)}</a> <span class="badge b-sky">${ic('search','sm')}Found by Google Search</span>
+    <div class="small muted">Source: ${c.sourceUrl ? `<a href="${esc(c.sourceUrl)}" target="_blank" rel="noopener">${esc(c.sourceTitle)} ${ic('ext','sm')}</a>` : esc(c.sourceTitle)} · double-check before sending</div>
+    <button class="btn sm ghost" data-findemail="${o.id}" style="margin-top:4px">${ic('refresh','sm')}Search again</button>`;
+  return `<span style="color:var(--red);font-weight:600">No email found</span><div class="small" style="color:var(--red)">${esc(c.note)}</div>
+    ${o.kind !== 'demo' ? `<button class="btn sm ghost" data-findemail="${o.id}" style="margin-top:4px">${ic('refresh','sm')}Search again</button>` : ''}`;
+}
+document.addEventListener('click', async e => {
+  const b = e.target.closest('[data-findemail]'); if (!b) return;
+  const o = OPP(b.dataset.findemail);
+  if (!S.settings.geminiKey) return toast('Add your Gemini key in My Profile → Settings', 'alert');
+  b.disabled = true; b.innerHTML = '<span class="spin"></span>Searching…';
+  try {
+    S.contacts[o.id] = await findContactEmail(o); save();
+    log(S.contacts[o.id].status === 'found' ? `Found contact email for ${o.title}` : `No public email found for ${o.title}`);
+    const a = S.apps[o.id]; if (a?.email && !a.email.to && S.contacts[o.id].email) { a.email.to = S.contacts[o.id].email; save(); }
+  } catch (err) { toast(err.message, 'alert'); }
+  render();
+});
 const GROUNDING = `Rules: Use ONLY facts in STUDENT_PROFILE. Never invent courses, papers read, grades, awards, skills, experiences or recipients. If the student lacks something, do not claim it. Do not flatter generically. Keep it concise, warm and professional. Do not include placeholder brackets.`;
 function profileForAI(p = S.profile){ const {name,eduLevel,school,gradYear,interests,skills,availability,projects,experiences,email} = p; return {name,email,eduLevel,school,gradYear,interests,skills,availability,projects:projects.map(({name,role,desc,skills})=>({name,role,desc,skills})),experiences:experiences.map(({type,title,org,when,desc})=>({type,title,org,when,desc}))}; }
 function oppForAI(o){ const {title,org,category,description,required,preferred,eduLevels,labFocus,contact} = o; return {title,org:org.replace(/ \(demo\)$/,''),category,description,required,preferred,eligibleLevels:eduLevels,focus:labFocus,recipientRole:contact?.role}; }
@@ -1120,6 +1178,7 @@ function viewApply(id){
   const tabs = o.method==='email' ? ['email'] : o.method==='form' ? ['form','email'] : ['form','email'];
   if (!WS.tab || !tabs.includes(WS.tab) || WS.id!==id) WS = { tab:tabs[0], id };
   if (!a.email) a.email = templateEmail(o);
+  if (!a.email.to && S.contacts[o.id]?.status === 'found') a.email.to = S.contacts[o.id].email;
   if (!a.form) a.form = buildForm(o);
   save();
 
@@ -1180,7 +1239,9 @@ function drawWS(o){
     <div class="card">
       <div class="card-head"><h3>${ic('mail','sm')}Personalized email</h3><span class="badge ${e.engine==='gemini'?'b-sky':''}">${e.engine==='gemini'?ic('sparkle','sm')+'Drafted with Gemini':'Template draft · from your profile'}</span></div>
       <div class="field"><label class="f" for="eTo">To</label><input class="input" id="eTo" placeholder="${o.contact?.role?`${esc(o.contact.role)}’s email — find it on the official page`:'Recipient email'}" value="${esc(e.to)}">
-        <div class="tiny ${e.to?'hide':''}" id="toHint" style="color:var(--amber);margin-top:5px">OPPAPP never guesses email addresses. Add the real address from the organization’s page.</div></div>
+        <div class="tiny ${e.to?'hide':''}" id="toHint" style="color:var(--red);margin-top:6px;font-weight:600">${S.contacts[o.id]?.status==='none' ? 'No email found. ' + esc(S.contacts[o.id].note) : o.kind==='demo' ? 'No email found. This is a fictional demo listing, so type an address in.' : 'No email yet. OPPAPP never guesses addresses.'}</div>
+        ${!S.contacts[o.id] && o.kind!=='demo' && !e.to ? `<button class="btn sm" data-findemail="${o.id}" style="margin-top:8px">${ic('search','sm')}Find email with Gemini</button>` : ''}
+        ${S.contacts[o.id]?.status==='found' && e.to===S.contacts[o.id].email ? `<div class="tiny muted" style="margin-top:6px">Found by Google Search on ${S.contacts[o.id].sourceUrl?`<a href="${esc(S.contacts[o.id].sourceUrl)}" target="_blank" rel="noopener">${esc(S.contacts[o.id].sourceTitle)}</a>`:esc(S.contacts[o.id].sourceTitle)} · double-check before sending</div>` : ''}</div>
       <div class="field"><div class="row between"><label class="f" for="eSub">Subject</label><button class="btn sm ghost" data-copy="sub">${ic('copy','sm')}Copy</button></div><input class="input" id="eSub" value="${esc(e.subject)}"></div>
       <div class="field"><div class="row between"><label class="f" for="eBody">Body</label><button class="btn sm ghost" data-copy="body">${ic('copy','sm')}Copy</button></div><textarea class="input" id="eBody" rows="16">${esc(e.body)}</textarea></div>
       <div class="row">
